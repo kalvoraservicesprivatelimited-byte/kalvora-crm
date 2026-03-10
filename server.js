@@ -86,41 +86,22 @@ app.get("/agent-by-email/:email", async (req, res) => {
 app.post("/agents", async (req, res) => {
   try {
     const { employee_id, name, email, phone, shift, password } = req.body;
+app.post("/create-agent", async (req, res) => {
+  try {
+    const { employee_id, name, email, phone, password, shift } = req.body;
 
-    const existingUser = await pool.query(
-      "SELECT * FROM public.users WHERE email=$1 OR employee_id=$2",
-      [email, employee_id]
+    const result = await pool.query(
+      `INSERT INTO agents (employee_id, name, email, phone, password, shift)
+       VALUES ($1,$2,$3,$4,$5,$6)
+       RETURNING *`,
+      [employee_id, name, email, phone, password, shift]
     );
 
-    const existingAgent = await pool.query(
-      "SELECT * FROM public.agents WHERE email=$1 OR employee_id=$2",
-      [email, employee_id]
-    );
+    res.json({ success: true, agent: result.rows[0] });
 
-    if (existingUser.rows.length > 0 || existingAgent.rows.length > 0) {
-      return res.json({
-        success: false,
-        message: "Email or Employee ID already exists"
-      });
-    }
-
-    const agentResult = await pool.query(
-      "INSERT INTO public.agents (employee_id, name, email, phone, shift) VALUES ($1,$2,$3,$4,$5) RETURNING *",
-      [employee_id, name, email, phone, shift]
-    );
-
-    await pool.query(
-      "INSERT INTO public.users (employee_id, name, email, password, role) VALUES ($1,$2,$3,$4,$5)",
-      [employee_id, name, email, password, "agent"]
-    );
-
-    res.json({
-      success: true,
-      agent: agentResult.rows[0]
-    });
-  } catch (error) {
-    console.log(error);
-    res.status(500).json({ error: "Create agent failed" });
+  } catch (err) {
+    console.error("CREATE AGENT ERROR:", err);
+    res.status(500).json({ success: false });
   }
 });
 
