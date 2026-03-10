@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Kalvora CRM</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body{
+      margin:0;
+      font-family:Inter,Arial;
+      background:#f3f6fb;
+    }
+    .crm{
+      display:flex;
+      height:100vh;
+    }
+    .sidebar{
+      width:230px;
+      background:#111827;
+      color:white;
+      padding:25px;
+    }
+    .sidebar h2{
+      margin-bottom:30px;
+    }
+    .sidebar li{
+      list-style:none;
+      padding:12px;
+      border-radius:6px;
+      margin-bottom:8px;
+      cursor:pointer;
+    }
+    .sidebar li:hover{
+      background:#1f2937;
+    }
+    .main{
+      flex:1;
+      display:flex;
+      flex-direction:column;
+    }
+    .topbar{
+      height:60px;
+      background:white;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      padding:0 25px;
+      box-shadow:0 2px 6px rgba(0,0,0,0.05);
+    }
+    .content{
+      padding:25px;
+      overflow:auto;
+    }
+    .card{
+      background:white;
+      padding:20px;
+      border-radius:10px;
+      margin-bottom:20px;
+      box-shadow:0 3px 10px rgba(0,0,0,0.05);
+    }
+    .cards{
+      display:grid;
+      grid-template-columns:repeat(4,1fr);
+      gap:20px;
+      margin-bottom:20px;
+    }
+    .metric{
+      font-size:14px;
+      color:#666;
+    }
+    .metric-value{
+      font-size:28px;
+      font-weight:bold;
+      margin-top:5px;
+    }
+    input,select,textarea{
+      width:100%;
+      padding:10px;
+      margin-top:10px;
+      border-radius:6px;
+      border:1px solid #ddd;
+      box-sizing:border-box;
+    }
+    button{
+      background:#2563eb;
+      color:white;
+      border:none;
+      padding:10px;
+      margin-top:10px;
+      border-radius:6px;
+      cursor:pointer;
+      width:100%;
+    }
+    table{
+      width:100%;
+      border-collapse:collapse;
+      margin-top:15px;
+    }
+    th{
+      background:#111827;
+      color:white;
+      padding:12px;
+      text-align:left;
+    }
+    td{
+      padding:12px;
+      border-bottom:1px solid #eee;
+    }
+    .section{
+      display:none;
+    }
+    .active{
+      display:block;
+    }
+    @media(max-width:1000px){
+      .cards{
+        grid-template-columns:1fr 1fr;
+      }
+      table{
+        display:block;
+        overflow-x:auto;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<div class="crm">
+
+  <div class="sidebar">
+    <h2>Kalvora</h2>
+    <ul>
+      <li onclick="showSection('dashboard')">Dashboard</li>
+      <li onclick="showSection('targetSection')">Target & Achievement</li>
+      <li onclick="showSection('sales')">Sales</li>
+      <li onclick="showSection('attendance')">Attendance</li>
+      <li onclick="showSection('leave')">Leave</li>
+      <li onclick="showSection('history')">My History</li>
+    </ul>
+  </div>
+
+  <div class="main">
+    <div class="topbar">
+      <div>Agent Panel</div>
+      <div id="agentName"></div>
+    </div>
+
+    <div class="content">
+
+      <div id="dashboard" class="section active">
+        <div class="cards">
+          <div class="card">
+            <div class="metric">Total Submitted Leads</div>
+            <div id="totalSales" class="metric-value">0</div>
+          </div>
+
+          <div class="card">
+            <div class="metric">Approved</div>
+            <div id="approvedCount" class="metric-value">0</div>
+          </div>
+
+          <div class="card">
+            <div class="metric">Pending</div>
+            <div id="pendingCount" class="metric-value">0</div>
+          </div>
+
+          <div class="card">
+            <div class="metric">Rejected</div>
+            <div id="rejectedCount" class="metric-value">0</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3>Approval Graph</h3>
+          <canvas id="salesChart"></canvas>
+        </div>
+      </div>
+
+      <div id="targetSection" class="section">
+        <div class="cards">
+          <div class="card">
+            <div class="metric">Target Type</div>
+            <div id="targetTypeCard" class="metric-value">-</div>
+          </div>
+
+          <div class="card">
+            <div class="metric">Assigned Target</div>
+            <div id="assignedTargetCard" class="metric-value">0</div>
+          </div>
+
+          <div class="card">
+            <div class="metric">Achievement</div>
+            <div id="achievedTargetCard" class="metric-value">0</div>
+          </div>
+
+          <div class="card">
+            <div class="metric">Left Target</div>
+            <div id="leftTargetCard" class="metric-value">0</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3>Target Details</h3>
+          <table>
+            <thead>
+              <tr>
+                <th>Month</th>
+                <th>Shift</th>
+                <th>Target Type</th>
+                <th>Assigned Target</th>
+                <th>Achievement</th>
+                <th>Left</th>
+              </tr>
+            </thead>
+            <tbody id="targetTable"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div id="sales" class="section">
+        <div class="card">
+          <h3>Submit Lead</h3>
+          <input id="saleName" placeholder="Customer Name">
+          <input id="salePhone" placeholder="Phone">
+          <input id="saleCity" placeholder="City">
+          <input id="saleBank" placeholder="Bank">
+          <button onclick="postSale()">Submit Lead</button>
+          <div id="saleMsg"></div>
+        </div>
+      </div>
+
+      <div id="attendance" class="section">
+        <div class="card">
+          <h3>Attendance</h3>
+          <button onclick="checkIn()">Check In</button>
+          <button onclick="checkOut()">Check Out</button>
+          <div id="attendanceMsg"></div>
+        </div>
+      </div>
+
+      <div id="leave" class="section">
+        <div class="card">
+          <h3>Apply Leave</h3>
+          <select id="leaveType">
+            <option value="paid leave">paid leave</option>
+            <option value="sick leave">sick leave</option>
+            <option value="emergency">emergency</option>
+            <option value="casual leave">casual leave</option>
+          </select>
+          <input type="date" id="startDate">
+          <input type="date" id="endDate">
+          <input id="reason" placeholder="Reason">
+          <button onclick="applyLeave()">Apply Leave</button>
+        </div>
+      </div>
+
+      <div id="history" class="section">
+        <div class="card">
+          <h3>My Leads</h3>
+          <table>
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Customer</th>
+                <th>Phone</th>
+                <th>City</th>
+                <th>Bank</th>
+                <th>Status</th>
+                <th>Time</th>
+              </tr>
+            </thead>
+            <tbody id="salesTable"></tbody>
+          </table>
+        </div>
+
+        <div class="card">
+          <h3>My Leave History</h3>
+          <table>
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Type</th>
+                <th>Start</th>
+                <th>End</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="leaveTable"></tbody>
+          </table>
+        </div>
+
+        <div class="card">
+          <h3>My Attendance</h3>
+          <table>
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Date</th>
+                <th>Check In</th>
+                <th>Check Out</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="attendanceTable"></tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+  let currentAgent = null;
+  let chartRef = null;
+
+  function formatIST(date){
+    return new Date(date).toLocaleString("en-IN",{
+      timeZone:"Asia/Kolkata",
+      year:"numeric",
+      month:"short",
+      day:"2-digit",
+      hour:"2-digit",
+      minute:"2-digit"
+    });
+  }
+
+  function showSection(id){
+    document.querySelectorAll(".section").forEach(sec => sec.classList.remove("active"));
+    document.getElementById(id).classList.add("active");
+  }
+
+  async function initAgentPage(){
+    const user = JSON.parse(localStorage.getItem("user"));
+
+    if(!user){
+      window.location.href = "/login.html";
+      return;
+    }
+
+    const res = await fetch("/agent-by-email/" + encodeURIComponent(user.email));
+    const data = await res.json();
+
+    if(!data.success){
+      alert("Agent details not found");
+      return;
+    }
+
+    currentAgent = data.agent;
+    document.getElementById("agentName").innerText =
+      currentAgent.name + " (" + (currentAgent.employee_id || "") + ")";
+
+    await loadSales();
+    await loadLeaves();
+    await loadAttendance();
+    await loadTargetAchievement();
+  }
+
+  function createGraph(approved, pending, rejected){
+    const ctx = document.getElementById("salesChart");
+
+    if (chartRef) {
+      chartRef.destroy();
+    }
+
+    chartRef = new Chart(ctx, {
+      type: "bar",
+      data: {
+        labels: ["Approved", "Pending", "Rejected"],
+        datasets: [{
+          data: [approved, pending, rejected]
+        }]
+      },
+      options: {
+        plugins: { legend: { display: false } }
+      }
+    });
+  }
+
+  async function loadTargetAchievement(){
+    const res = await fetch("/my-target/" + currentAgent.id);
+    const data = await res.json();
+
+    const table = document.getElementById("targetTable");
+    table.innerHTML = "";
+
+    if (!data.success || !data.target) {
+      document.getElementById("targetTypeCard").innerText = "-";
+      document.getElementById("assignedTargetCard").innerText = "0";
+      document.getElementById("achievedTargetCard").innerText = "0";
+      document.getElementById("leftTargetCard").innerText = "0";
+      table.innerHTML = `<tr><td colspan="6">No target assigned</td></tr>`;
+      return;
+    }
+
+    const target = data.target;
+
+    let achieved = Number(target.achieved_value || 0);
+
+    if (target.shift === "day") {
+      const salesRes = await fetch("/my-sales/" + currentAgent.id);
+      const salesData = await salesRes.json();
+      if (salesData.sales) {
+        achieved = salesData.sales.filter(s => s.status === "approved").length;
+      }
+    }
+
+    const left = Math.max(0, Number(target.target_value) - achieved);
+
+    document.getElementById("targetTypeCard").innerText = target.target_type || "-";
+    document.getElementById("assignedTargetCard").innerText = target.target_value || 0;
+    document.getElementById("achievedTargetCard").innerText = achieved;
+    document.getElementById("leftTargetCard").innerText = left;
+
+    table.innerHTML = `
+      <tr>
+        <td>${target.month_name || ""}</td>
+        <td>${target.shift || ""}</td>
+        <td>${target.target_type || ""}</td>
+        <td>${target.target_value || 0}</td>
+        <td>${achieved}</td>
+        <td>${left}</td>
+      </tr>
+    `;
+  }
+
+  async function postSale(){
+    const res = await fetch("/sales", {
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({
+        agent_id: currentAgent.id,
+        name: saleName.value,
+        phone: salePhone.value,
+        city: saleCity.value,
+        bank: saleBank.value
+      })
+    });
+
+    const data = await res.json();
+    document.getElementById("saleMsg").innerText = data.success ? "Lead submitted" : "Lead submit failed";
+
+    if (data.success) {
+      document.getElementById("saleName").value = "";
+      document.getElementById("salePhone").value = "";
+      document.getElementById("saleCity").value = "";
+      document.getElementById("saleBank").value = "";
+    }
+
+    await loadSales();
+    await loadTargetAchievement();
+  }
+
+  async function loadSales(){
+    const res = await fetch("/my-sales/" + currentAgent.id);
+    const data = await res.json();
+
+    const table = document.getElementById("salesTable");
+    table.innerHTML = "";
+
+    if (!data.sales) return;
+
+    let approved = 0;
+    let pending = 0;
+    let rejected = 0;
+
+    data.sales.forEach(s => {
+      if (s.status === "approved") approved++;
+      else if (s.status === "rejected") rejected++;
+      else pending++;
+
+      table.innerHTML += `
+        <tr>
+          <td>${s.id}</td>
+          <td>${s.name}</td>
+          <td>${s.phone}</td>
+          <td>${s.city}</td>
+          <td>${s.bank}</td>
+          <td>${s.status}</td>
+          <td>${formatIST(s.created_at)}</td>
+        </tr>
+      `;
+    });
+
+    document.getElementById("totalSales").innerText = data.sales.length;
+    document.getElementById("approvedCount").innerText = approved;
+    document.getElementById("pendingCount").innerText = pending;
+    document.getElementById("rejectedCount").innerText = rejected;
+
+    createGraph(approved, pending, rejected);
+  }
+
+  async function checkIn(){
+    const res = await fetch("/attendance/check-in", {
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({agent_id: currentAgent.id})
+    });
+
+    const data = await res.json();
+    document.getElementById("attendanceMsg").innerText = data.message || "Checked In";
+    loadAttendance();
+  }
+
+  async function checkOut(){
+    const res = await fetch("/attendance/check-out", {
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({agent_id: currentAgent.id})
+    });
+
+    const data = await res.json();
+    document.getElementById("attendanceMsg").innerText = data.message || "Checked Out";
+    loadAttendance();
+  }
+
+  async function loadAttendance(){
+    const res = await fetch("/my-attendance/" + currentAgent.id);
+    const data = await res.json();
+
+    const table = document.getElementById("attendanceTable");
+    table.innerHTML = "";
+
+    if (!data.attendance) return;
+
+    data.attendance.forEach(a => {
+      table.innerHTML += `
+        <tr>
+          <td>${a.id}</td>
+          <td>${a.attendance_date || ""}</td>
+          <td>${a.check_in ? formatIST(a.check_in) : ""}</td>
+          <td>${a.check_out ? formatIST(a.check_out) : ""}</td>
+          <td>${a.status || ""}</td>
+        </tr>
+      `;
+    });
+  }
+
+  async function applyLeave(){
+    await fetch("/leave/apply", {
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({
+        agent_id: currentAgent.id,
+        leave_type: leaveType.value,
+        start_date: startDate.value,
+        end_date: endDate.value,
+        reason: reason.value
+      })
+    });
+
+    alert("Leave applied");
+    loadLeaves();
+  }
+
+  async function loadLeaves(){
+    const res = await fetch("/my-leave/" + currentAgent.id);
+    const data = await res.json();
+
+    const table = document.getElementById("leaveTable");
+    table.innerHTML = "";
+
+    if (!data.leaves) return;
+
+    data.leaves.forEach(l => {
+      table.innerHTML += `
+        <tr>
+          <td>${l.id}</td>
+          <td>${l.leave_type}</td>
+          <td>${l.start_date}</td>
+          <td>${l.end_date}</td>
+          <td>${l.status}</td>
+        </tr>
+      `;
+    });
+  }
+
+  initAgentPage();
+</script>
+
+</body>
+</html>
