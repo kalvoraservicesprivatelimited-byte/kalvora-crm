@@ -6,7 +6,7 @@
   <style>
     body{
       margin:0;
-      font-family:Inter,Arial;
+      font-family:Inter,Arial,sans-serif;
       background:#f3f6fb;
     }
     .crm{
@@ -273,6 +273,8 @@
             <option value="Zelle">Zelle</option>
           </select>
 
+          <input id="payment_link" placeholder="Payment Link">
+
           <div id="cardFields" style="display:none;">
             <input id="card_number" placeholder="Card Number">
             <input id="cvv" placeholder="CVV">
@@ -443,17 +445,25 @@
     }
 
     const target = data.target;
-    let achieved = Number(target.achieved_value || 0);
+    let achieved = 0;
 
-    if ((currentAgent.shift || "").toLowerCase() === "day") {
+    if ((currentAgent.shift || "").toLowerCase() === "night") {
+      const ordersRes = await fetch("/my-autoparts-orders/" + currentAgent.id);
+      const ordersData = await ordersRes.json();
+
+      if (ordersData.orders) {
+        achieved = ordersData.orders.filter(o => o.status === "approved").length;
+      }
+    } else {
       const salesRes = await fetch("/my-sales/" + currentAgent.id);
       const salesData = await salesRes.json();
+
       if (salesData.sales) {
         achieved = salesData.sales.filter(s => s.status === "approved").length;
       }
     }
 
-    const left = Math.max(0, Number(target.target_value) - achieved);
+    const left = Math.max(0, Number(target.target_value || 0) - achieved);
 
     document.getElementById("targetTypeCard").innerText = target.target_type || "-";
     document.getElementById("assignedTargetCard").innerText = target.target_value || 0;
@@ -524,6 +534,7 @@
         total_amount: document.getElementById("total_amount").value,
         order_type: document.getElementById("order_type").value,
         payment_mode: document.getElementById("payment_mode").value,
+        payment_link: document.getElementById("payment_link").value,
         card_number: document.getElementById("card_number").value,
         cvv: document.getElementById("cvv").value,
         exp: document.getElementById("exp").value,
@@ -555,6 +566,7 @@
       document.getElementById("total_amount").value = "";
       document.getElementById("order_type").value = "";
       document.getElementById("payment_mode").value = "";
+      document.getElementById("payment_link").value = "";
       document.getElementById("card_number").value = "";
       document.getElementById("cvv").value = "";
       document.getElementById("exp").value = "";
@@ -563,6 +575,7 @@
     }
 
     await loadSales();
+    await loadTargetAchievement();
   }
 
   async function loadSales(){
@@ -641,7 +654,7 @@
 
     const data = await res.json();
     document.getElementById("attendanceMsg").innerText = data.message || "Checked In";
-    loadAttendance();
+    await loadAttendance();
   }
 
   async function checkOut(){
@@ -653,7 +666,7 @@
 
     const data = await res.json();
     document.getElementById("attendanceMsg").innerText = data.message || "Checked Out";
-    loadAttendance();
+    await loadAttendance();
   }
 
   async function loadAttendance(){
