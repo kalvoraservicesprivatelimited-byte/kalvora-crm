@@ -302,6 +302,7 @@ app.post("/autoparts-orders", async (req, res) => {
       total_amount,
       order_type,
       payment_mode,
+      payment_link,
       card_number,
       cvv,
       exp,
@@ -365,6 +366,7 @@ app.post("/autoparts-orders", async (req, res) => {
         total_amount,
         order_type,
         payment_mode,
+        payment_link,
         card_number,
         cvv,
         exp,
@@ -373,7 +375,7 @@ app.post("/autoparts-orders", async (req, res) => {
       ) VALUES (
         $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,
         $11,$12,$13,$14,$15,$16,$17,$18,$19,$20,
-        $21,$22,$23,$24,'pending'
+        $21,$22,$23,$24,$25,'pending'
       ) RETURNING *`,
       [
         agent_id,
@@ -396,6 +398,7 @@ app.post("/autoparts-orders", async (req, res) => {
         Number(total_amount),
         order_type,
         payment_mode,
+        payment_link || null,
         card_number || null,
         cvv || null,
         exp || null,
@@ -499,7 +502,7 @@ app.put("/autoparts-order-status/:id", async (req, res) => {
   }
 });
 
-/* CHECK-IN */
+/* CHECK-IN FOR ALL AGENTS */
 app.post("/attendance/check-in", async (req, res) => {
   try {
     const { agent_id } = req.body;
@@ -518,8 +521,8 @@ app.post("/attendance/check-in", async (req, res) => {
 
     const result = await pool.query(
       `INSERT INTO public.attendance
-       (agent_id, attendance_date, check_in, status)
-       VALUES ($1, CURRENT_DATE, NOW(), 'present')
+       (agent_id, attendance_date, check_in, status, total_login_seconds)
+       VALUES ($1, CURRENT_DATE, NOW(), 'present', 0)
        RETURNING *`,
       [agent_id]
     );
@@ -538,25 +541,43 @@ app.post("/attendance/check-in", async (req, res) => {
   }
 });
 
-/* CHECK-OUT */
+/* CHECK-OUT FOR ALL AGENTS */
 app.post("/attendance/check-out", async (req, res) => {
   try {
     const { agent_id } = req.body;
 
-    const result = await pool.query(
-      `UPDATE public.attendance
-       SET check_out=NOW()
+    const existing = await pool.query(
+      `SELECT * FROM public.attendance
        WHERE agent_id=$1 AND attendance_date=CURRENT_DATE
-       RETURNING *`,
+       LIMIT 1`,
       [agent_id]
     );
 
-    if (result.rows.length === 0) {
+    if (existing.rows.length === 0) {
       return res.json({
         success: false,
         message: "No check-in found for today"
       });
     }
+
+    const attendanceRow = existing.rows[0];
+
+    if (!attendanceRow.check_in) {
+      return res.json({
+        success: false,
+        message: "No check-in found for today"
+      });
+    }
+
+    const result = await pool.query(
+      `UPDATE public.attendance
+       SET
+         check_out = NOW(),
+         total_login_seconds = EXTRACT(EPOCH FROM (NOW() - check_in))::INTEGER
+       WHERE id=$1
+       RETURNING *`,
+      [attendanceRow.id]
+    );
 
     return res.json({
       success: true,
@@ -572,24 +593,37 @@ app.post("/attendance/check-out", async (req, res) => {
   }
 });
 
-/* ALL ATTENDANCE FOR ADMIN */
+/* ADMIN ATTENDANCE WITH OPTIONAL DATE FILTER */
 app.get("/attendance", async (req, res) => {
   try {
-    const result = await pool.query(`
+    const { date } = req.query;
+
+    let query = `
       SELECT
         at.id,
         at.agent_id,
         a.name AS agent_name,
         a.employee_id,
+        a.shift,
         at.attendance_date,
         at.check_in,
         at.check_out,
+        at.total_login_seconds,
         at.status,
         at.created_at
       FROM public.attendance at
       LEFT JOIN public.agents a ON at.agent_id = a.id
-      ORDER BY at.id DESC
-    `);
+    `;
+    let values = [];
+
+    if (date) {
+      query += ` WHERE at.attendance_date = $1 `;
+      values.push(date);
+    }
+
+    query += ` ORDER BY at.attendance_date DESC, at.id DESC`;
+
+    const result = await pool.query(query, values);
 
     return res.json({
       success: true,
@@ -604,15 +638,35 @@ app.get("/attendance", async (req, res) => {
   }
 });
 
-/* MY ATTENDANCE */
+/* AGENT ATTENDANCE WITH OPTIONAL DATE FILTER */
 app.get("/my-attendance/:agentId", async (req, res) => {
   try {
     const { agentId } = req.params;
+    const { date } = req.query;
 
-    const result = await pool.query(
-      "SELECT * FROM public.attendance WHERE agent_id=$1 ORDER BY id DESC",
-      [agentId]
-    );
+    let query = `
+      SELECT
+        id,
+        agent_id,
+        attendance_date,
+        check_in,
+        check_out,
+        total_login_seconds,
+        status,
+        created_at
+      FROM public.attendance
+      WHERE agent_id=$1
+    `;
+    let values = [agentId];
+
+    if (date) {
+      query += ` AND attendance_date=$2 `;
+      values.push(date);
+    }
+
+    query += ` ORDER BY attendance_date DESC, id DESC`;
+
+    const result = await pool.query(query, values);
 
     return res.json({
       success: true,

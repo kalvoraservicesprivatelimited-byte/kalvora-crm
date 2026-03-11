@@ -132,7 +132,7 @@
     }
     .modal{
       background:#fff;
-      width:min(900px, 100%);
+      width:min(950px, 100%);
       max-height:90vh;
       overflow:auto;
       border-radius:12px;
@@ -172,6 +172,28 @@
       font-size:14px;
       color:#111827;
       word-break:break-word;
+    }
+    a{
+      color:#2563eb;
+      text-decoration:none;
+    }
+    a:hover{
+      text-decoration:underline;
+    }
+    .date-filter-box{
+      display:flex;
+      gap:10px;
+      align-items:center;
+      flex-wrap:wrap;
+      margin-bottom:10px;
+    }
+    .date-filter-box input{
+      max-width:220px;
+      margin-top:0;
+    }
+    .date-filter-box button{
+      width:auto;
+      margin-top:0;
     }
     @media(max-width:1100px){
       .grid2{
@@ -351,9 +373,11 @@
 
       <div id="attendanceSection" class="section">
         <div class="card">
-          <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;">
+          <div class="date-filter-box">
             <h3 style="margin:0;">Attendance</h3>
-            <button class="refresh-btn" onclick="loadAttendance()">Refresh Attendance</button>
+            <input type="date" id="adminAttendanceDate">
+            <button onclick="filterAdminAttendance()">Filter</button>
+            <button onclick="resetAdminAttendance()">Reset</button>
           </div>
           <table>
             <thead>
@@ -361,9 +385,11 @@
                 <th>ID</th>
                 <th>Emp ID</th>
                 <th>Name</th>
+                <th>Shift</th>
                 <th>Date</th>
                 <th>Check In</th>
                 <th>Check Out</th>
+                <th>Total Login Time</th>
                 <th>Status</th>
               </tr>
             </thead>
@@ -435,6 +461,19 @@
     return new Date(value).toLocaleString("en-IN", { timeZone: "Asia/Kolkata" });
   }
 
+  function formatSeconds(seconds){
+    const total = Number(seconds || 0);
+    const h = Math.floor(total / 3600);
+    const m = Math.floor((total % 3600) / 60);
+    const s = total % 60;
+    return `${h}h ${m}m ${s}s`;
+  }
+
+  function makeLink(value){
+    if (!value) return "";
+    return `<a href="${value}" target="_blank">${value}</a>`;
+  }
+
   function openDetailsModal(title, rows) {
     document.getElementById("detailsModalTitle").innerText = title;
     const body = document.getElementById("detailsModalBody");
@@ -487,7 +526,7 @@
       { label: "Zipcode", value: o.zipcode || "" },
       { label: "Billing Address", value: o.billing_address || "" },
       { label: "Type of Customer", value: o.type_of_customer || "" },
-      { label: "Product Link", value: o.product_link || "" },
+      { label: "Product Link", value: makeLink(o.product_link || "") },
       { label: "Part Name", value: o.part_name || "" },
       { label: "Car Make In Year", value: o.car_make_in_year || "" },
       { label: "Brand Name / Manufacturer", value: o.brand_name || "" },
@@ -497,6 +536,7 @@
       { label: "Total Amount", value: o.total_amount || "" },
       { label: "Order Type", value: o.order_type || "" },
       { label: "Payment Mode", value: o.payment_mode || "" },
+      { label: "Payment Link", value: o.payment_link ? makeLink(o.payment_link) : "" },
       { label: "Card Number", value: o.card_number || "" },
       { label: "CVV", value: o.cvv || "" },
       { label: "Exp", value: o.exp || "" },
@@ -769,16 +809,21 @@
     }
   }
 
-  async function loadAttendance(){
+  async function loadAttendance(filterDate = ""){
     try {
-      const res = await fetch("/attendance");
+      let url = "/attendance";
+      if (filterDate) {
+        url += "?date=" + encodeURIComponent(filterDate);
+      }
+
+      const res = await fetch(url);
       const data = await res.json();
 
       const table = document.getElementById("attendanceTable");
       table.innerHTML = "";
 
       if (!data.success || !data.attendance || data.attendance.length === 0) {
-        table.innerHTML = `<tr><td colspan="7">No attendance found</td></tr>`;
+        table.innerHTML = `<tr><td colspan="9">No attendance found</td></tr>`;
         return;
       }
 
@@ -788,17 +833,29 @@
             <td>${a.id || ""}</td>
             <td>${a.employee_id || ""}</td>
             <td>${a.agent_name || ""}</td>
+            <td>${a.shift || ""}</td>
             <td>${a.attendance_date || ""}</td>
             <td>${formatDateTime(a.check_in)}</td>
             <td>${formatDateTime(a.check_out)}</td>
+            <td>${formatSeconds(a.total_login_seconds || 0)}</td>
             <td>${a.status || ""}</td>
           </tr>
         `;
       });
     } catch (error) {
       console.log("LOAD ATTENDANCE ERROR:", error);
-      document.getElementById("attendanceTable").innerHTML = `<tr><td colspan="7">Failed to load attendance</td></tr>`;
+      document.getElementById("attendanceTable").innerHTML = `<tr><td colspan="9">Failed to load attendance</td></tr>`;
     }
+  }
+
+  async function filterAdminAttendance(){
+    const date = document.getElementById("adminAttendanceDate").value;
+    await loadAttendance(date);
+  }
+
+  async function resetAdminAttendance(){
+    document.getElementById("adminAttendanceDate").value = "";
+    await loadAttendance();
   }
 
   async function loadLeaves(){
