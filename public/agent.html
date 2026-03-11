@@ -271,9 +271,10 @@
             <option value="Bank Transfer">Bank Transfer</option>
             <option value="Cashapp">Cashapp</option>
             <option value="Zelle">Zelle</option>
+            <option value="Payment Link">Payment Link</option>
           </select>
 
-          <input id="payment_link" placeholder="Payment Link">
+          <input id="payment_link" placeholder="Payment Link" style="display:none;">
 
           <div id="cardFields" style="display:none;">
             <input id="card_number" placeholder="Card Number">
@@ -362,13 +363,29 @@
   }
 
   function togglePaymentFields() {
-    const paymentMode = document.getElementById("payment_mode").value;
+    const mode = document.getElementById("payment_mode").value;
     const cardFields = document.getElementById("cardFields");
+    const paymentLink = document.getElementById("payment_link");
 
-    if (paymentMode === "Credit / Debit Card") {
+    if (mode === "Credit / Debit Card") {
       cardFields.style.display = "block";
+      paymentLink.style.display = "none";
+      paymentLink.value = "";
+    } else if (mode === "Payment Link") {
+      cardFields.style.display = "none";
+      paymentLink.style.display = "block";
+      document.getElementById("card_number").value = "";
+      document.getElementById("cvv").value = "";
+      document.getElementById("exp").value = "";
+      document.getElementById("card_holder_name").value = "";
     } else {
       cardFields.style.display = "none";
+      paymentLink.style.display = "none";
+      paymentLink.value = "";
+      document.getElementById("card_number").value = "";
+      document.getElementById("cvv").value = "";
+      document.getElementById("exp").value = "";
+      document.getElementById("card_holder_name").value = "";
     }
   }
 
@@ -448,25 +465,30 @@
     let achieved = 0;
 
     if ((currentAgent.shift || "").toLowerCase() === "night") {
-      const ordersRes = await fetch("/my-autoparts-orders/" + currentAgent.id);
-      const ordersData = await ordersRes.json();
+      const resOrders = await fetch("/my-autoparts-orders/" + currentAgent.id);
+      const dataOrders = await resOrders.json();
 
-      if (ordersData.orders) {
-        achieved = ordersData.orders.filter(o => o.status === "approved").length;
+      if (dataOrders.orders) {
+        dataOrders.orders
+          .filter(o => o.status === "approved")
+          .forEach(o => {
+            achieved += Number(o.commission_amount || 0);
+          });
       }
     } else {
-      const salesRes = await fetch("/my-sales/" + currentAgent.id);
-      const salesData = await salesRes.json();
+      const resSales = await fetch("/my-sales/" + currentAgent.id);
+      const dataSales = await resSales.json();
 
-      if (salesData.sales) {
-        achieved = salesData.sales.filter(s => s.status === "approved").length;
+      if (dataSales.sales) {
+        achieved = dataSales.sales.filter(s => s.status === "approved").length;
       }
     }
 
-    const left = Math.max(0, Number(target.target_value || 0) - achieved);
+    const assigned = Number(target.target_value || 0);
+    const left = Math.max(0, assigned - achieved);
 
     document.getElementById("targetTypeCard").innerText = target.target_type || "-";
-    document.getElementById("assignedTargetCard").innerText = target.target_value || 0;
+    document.getElementById("assignedTargetCard").innerText = assigned;
     document.getElementById("achievedTargetCard").innerText = achieved;
     document.getElementById("leftTargetCard").innerText = left;
 
@@ -475,7 +497,7 @@
         <td>${target.month_name || ""}</td>
         <td>${target.shift || ""}</td>
         <td>${target.target_type || ""}</td>
-        <td>${target.target_value || 0}</td>
+        <td>${assigned}</td>
         <td>${achieved}</td>
         <td>${left}</td>
       </tr>
@@ -572,6 +594,7 @@
       document.getElementById("exp").value = "";
       document.getElementById("card_holder_name").value = "";
       document.getElementById("cardFields").style.display = "none";
+      document.getElementById("payment_link").style.display = "none";
     }
 
     await loadSales();
