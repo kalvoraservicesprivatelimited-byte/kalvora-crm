@@ -1,43 +1,151 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Kalvora CRM - Agent</title>
+  <title>Kalvora CRM</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
-    body{margin:0;font-family:Arial;background:#f3f6fb}
-    .crm{display:flex;height:100vh}
-    .sidebar{width:230px;background:#111827;color:#fff;padding:25px}
-    .sidebar h2{margin-bottom:30px}
-    .sidebar li{list-style:none;padding:12px;border-radius:6px;margin-bottom:8px;cursor:pointer}
-    .sidebar li:hover{background:#1f2937}
-    .main{flex:1;display:flex;flex-direction:column}
-    .topbar{height:60px;background:#fff;display:flex;align-items:center;justify-content:space-between;padding:0 25px;box-shadow:0 2px 6px rgba(0,0,0,.05)}
-    .content{padding:25px;overflow:auto}
-    .card{background:#fff;padding:20px;border-radius:10px;margin-bottom:20px;box-shadow:0 3px 10px rgba(0,0,0,.05)}
-    .cards{display:grid;grid-template-columns:repeat(4,1fr);gap:20px;margin-bottom:20px}
-    .metric{font-size:14px;color:#666}
-    .metric-value{font-size:28px;font-weight:bold;margin-top:5px}
-    input,select{width:100%;padding:10px;margin-top:10px;border-radius:6px;border:1px solid #ddd;box-sizing:border-box}
-    button{background:#2563eb;color:#fff;border:none;padding:10px;margin-top:10px;border-radius:6px;cursor:pointer;width:100%}
-    table{width:100%;border-collapse:collapse;margin-top:15px}
-    th{background:#111827;color:#fff;padding:12px;text-align:left}
-    td{padding:12px;border-bottom:1px solid #eee}
-    .section{display:none}
-    .active{display:block}
-    .top-right{display:flex;align-items:center;gap:12px}
-    .logout-btn{width:auto;background:#dc2626;padding:8px 14px;margin-top:0}
+    body{
+      margin:0;
+      font-family:Inter,Arial;
+      background:#f3f6fb;
+    }
+    .crm{
+      display:flex;
+      height:100vh;
+    }
+    .sidebar{
+      width:230px;
+      background:#111827;
+      color:white;
+      padding:25px;
+    }
+    .sidebar h2{
+      margin-bottom:30px;
+    }
+    .sidebar li{
+      list-style:none;
+      padding:12px;
+      border-radius:6px;
+      margin-bottom:8px;
+      cursor:pointer;
+    }
+    .sidebar li:hover{
+      background:#1f2937;
+    }
+    .main{
+      flex:1;
+      display:flex;
+      flex-direction:column;
+    }
+    .topbar{
+      height:60px;
+      background:white;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      padding:0 25px;
+      box-shadow:0 2px 6px rgba(0,0,0,0.05);
+    }
+    .content{
+      padding:25px;
+      overflow:auto;
+    }
+    .card{
+      background:white;
+      padding:20px;
+      border-radius:10px;
+      margin-bottom:20px;
+      box-shadow:0 3px 10px rgba(0,0,0,0.05);
+    }
+    .cards{
+      display:grid;
+      grid-template-columns:repeat(4,1fr);
+      gap:20px;
+      margin-bottom:20px;
+    }
+    .metric{
+      font-size:14px;
+      color:#666;
+    }
+    .metric-value{
+      font-size:28px;
+      font-weight:bold;
+      margin-top:5px;
+    }
+    input,select,textarea{
+      width:100%;
+      padding:10px;
+      margin-top:10px;
+      border-radius:6px;
+      border:1px solid #ddd;
+      box-sizing:border-box;
+    }
+    button{
+      background:#2563eb;
+      color:white;
+      border:none;
+      padding:10px;
+      margin-top:10px;
+      border-radius:6px;
+      cursor:pointer;
+      width:100%;
+    }
+    table{
+      width:100%;
+      border-collapse:collapse;
+      margin-top:15px;
+    }
+    th{
+      background:#111827;
+      color:white;
+      padding:12px;
+      text-align:left;
+    }
+    td{
+      padding:12px;
+      border-bottom:1px solid #eee;
+    }
+    .section{
+      display:none;
+    }
+    .active{
+      display:block;
+    }
+    .top-right{
+      display:flex;
+      align-items:center;
+      gap:12px;
+    }
+    .logout-btn{
+      width:auto;
+      background:#dc2626;
+      padding:8px 14px;
+      margin-top:0;
+    }
+    .logout-btn:hover{
+      background:#b91c1c;
+    }
+    @media(max-width:1000px){
+      .cards{
+        grid-template-columns:1fr 1fr;
+      }
+      table{
+        display:block;
+        overflow-x:auto;
+      }
+    }
   </style>
 </head>
 <body>
+
 <div class="crm">
   <div class="sidebar">
     <h2>Kalvora</h2>
     <ul>
       <li onclick="showSection('dashboard')">Dashboard</li>
       <li onclick="showSection('targetSection')">Target & Achievement</li>
-      <li onclick="showSection('sales')">Sales</li>
+      <li onclick="showSection('sales')">Work Form</li>
       <li onclick="showSection('attendance')">Attendance</li>
-      <li onclick="showSection('leave')">Leave</li>
       <li onclick="showSection('history')">My History</li>
     </ul>
   </div>
@@ -46,7 +154,7 @@
     <div class="topbar">
       <div>Agent Panel</div>
       <div class="top-right">
-        <div id="agentName">Agent</div>
+        <div id="agentName"></div>
         <button class="logout-btn" onclick="logout()">Logout</button>
       </div>
     </div>
@@ -55,24 +163,56 @@
 
       <div id="dashboard" class="section active">
         <div class="cards">
-          <div class="card"><div class="metric">Total Submitted Leads</div><div id="totalSales" class="metric-value">0</div></div>
-          <div class="card"><div class="metric">Approved</div><div id="approvedCount" class="metric-value">0</div></div>
-          <div class="card"><div class="metric">Pending</div><div id="pendingCount" class="metric-value">0</div></div>
-          <div class="card"><div class="metric">Rejected</div><div id="rejectedCount" class="metric-value">0</div></div>
+          <div class="card">
+            <div class="metric">Total Submitted</div>
+            <div id="totalSales" class="metric-value">0</div>
+          </div>
+
+          <div class="card">
+            <div class="metric">Approved</div>
+            <div id="approvedCount" class="metric-value">0</div>
+          </div>
+
+          <div class="card">
+            <div class="metric">Pending</div>
+            <div id="pendingCount" class="metric-value">0</div>
+          </div>
+
+          <div class="card">
+            <div class="metric">Rejected</div>
+            <div id="rejectedCount" class="metric-value">0</div>
+          </div>
         </div>
+
         <div class="card">
-          <h3>Approval Graph</h3>
+          <h3>Performance Graph</h3>
           <canvas id="salesChart"></canvas>
         </div>
       </div>
 
       <div id="targetSection" class="section">
         <div class="cards">
-          <div class="card"><div class="metric">Target Type</div><div id="targetTypeCard" class="metric-value">-</div></div>
-          <div class="card"><div class="metric">Assigned Target</div><div id="assignedTargetCard" class="metric-value">0</div></div>
-          <div class="card"><div class="metric">Achievement</div><div id="achievedTargetCard" class="metric-value">0</div></div>
-          <div class="card"><div class="metric">Left Target</div><div id="leftTargetCard" class="metric-value">0</div></div>
+          <div class="card">
+            <div class="metric">Target Type</div>
+            <div id="targetTypeCard" class="metric-value">-</div>
+          </div>
+
+          <div class="card">
+            <div class="metric">Assigned Target</div>
+            <div id="assignedTargetCard" class="metric-value">0</div>
+          </div>
+
+          <div class="card">
+            <div class="metric">Achievement</div>
+            <div id="achievedTargetCard" class="metric-value">0</div>
+          </div>
+
+          <div class="card">
+            <div class="metric">Left Target</div>
+            <div id="leftTargetCard" class="metric-value">0</div>
+          </div>
         </div>
+
         <div class="card">
           <h3>Target Details</h3>
           <table>
@@ -92,14 +232,56 @@
       </div>
 
       <div id="sales" class="section">
-        <div class="card">
-          <h3>Submit Lead</h3>
+
+        <div id="dayShiftForm" class="card" style="display:none;">
+          <h3>Submit Credit Card Lead</h3>
           <input id="saleName" placeholder="Customer Name">
           <input id="salePhone" placeholder="Phone">
           <input id="saleCity" placeholder="City">
           <input id="saleBank" placeholder="Bank">
           <button onclick="postSale()">Submit Lead</button>
           <div id="saleMsg"></div>
+        </div>
+
+        <div id="nightShiftForm" class="card" style="display:none;">
+          <h3>Submit Autoparts Order</h3>
+
+          <input id="customer_name" placeholder="Customer Name">
+          <input id="customer_contact_number" placeholder="Customer Contact Number">
+          <input id="customer_email_id" placeholder="Customer Email ID">
+          <input id="address" placeholder="Address">
+          <input id="city" placeholder="City">
+          <input id="state" placeholder="State">
+          <input id="zipcode" placeholder="Zipcode">
+          <input id="billing_address" placeholder="Billing Address">
+          <input id="type_of_customer" placeholder="Type of Customer">
+          <input id="product_link" placeholder="Product Link">
+          <input id="part_name" placeholder="Part Name">
+          <input id="car_make_in_year" placeholder="Car Make In Year">
+          <input id="brand_name" placeholder="Brand Name / Manufacturer">
+          <input id="actual_part_price" placeholder="Actual Part Price">
+          <input id="commission_amount" placeholder="Commission Amount ($)">
+          <input id="discount_applied" placeholder="Discount Applied">
+          <input id="total_amount" placeholder="Total Amount">
+          <input id="order_type" placeholder="Order Type">
+
+          <select id="payment_mode" onchange="togglePaymentFields()">
+            <option value="">Select Payment Mode</option>
+            <option value="Credit / Debit Card">Credit / Debit Card</option>
+            <option value="Bank Transfer">Bank Transfer</option>
+            <option value="Cashapp">Cashapp</option>
+            <option value="Zelle">Zelle</option>
+          </select>
+
+          <div id="cardFields" style="display:none;">
+            <input id="card_number" placeholder="Card Number">
+            <input id="cvv" placeholder="CVV">
+            <input id="exp" placeholder="Exp">
+            <input id="card_holder_name" placeholder="Card Holder Name">
+          </div>
+
+          <button onclick="submitAutopartsOrder()">Submit Order</button>
+          <div id="autopartsMsg"></div>
         </div>
       </div>
 
@@ -112,54 +294,22 @@
         </div>
       </div>
 
-      <div id="leave" class="section">
-        <div class="card">
-          <h3>Apply Leave</h3>
-          <select id="leaveType">
-            <option value="paid leave">paid leave</option>
-            <option value="sick leave">sick leave</option>
-            <option value="emergency">emergency</option>
-            <option value="casual leave">casual leave</option>
-          </select>
-          <input type="date" id="startDate">
-          <input type="date" id="endDate">
-          <input id="reason" placeholder="Reason">
-          <button onclick="applyLeave()">Apply Leave</button>
-        </div>
-      </div>
-
       <div id="history" class="section">
         <div class="card">
-          <h3>My Leads</h3>
+          <h3>My Work History</h3>
           <table>
             <thead>
               <tr>
                 <th>ID</th>
                 <th>Customer</th>
                 <th>Phone</th>
-                <th>City</th>
-                <th>Bank</th>
+                <th>City / State</th>
+                <th>Product / Bank</th>
                 <th>Status</th>
                 <th>Time</th>
               </tr>
             </thead>
             <tbody id="salesTable"></tbody>
-          </table>
-        </div>
-
-        <div class="card">
-          <h3>My Leave History</h3>
-          <table>
-            <thead>
-              <tr>
-                <th>ID</th>
-                <th>Type</th>
-                <th>Start</th>
-                <th>End</th>
-                <th>Status</th>
-              </tr>
-            </thead>
-            <tbody id="leaveTable"></tbody>
           </table>
         </div>
 
@@ -209,8 +359,20 @@
     window.location.href = "/login.html";
   }
 
+  function togglePaymentFields() {
+    const paymentMode = document.getElementById("payment_mode").value;
+    const cardFields = document.getElementById("cardFields");
+
+    if (paymentMode === "Credit / Debit Card") {
+      cardFields.style.display = "block";
+    } else {
+      cardFields.style.display = "none";
+    }
+  }
+
   async function initAgentPage(){
     const user = JSON.parse(localStorage.getItem("user"));
+
     if(!user || user.role !== "agent"){
       window.location.href = "/login.html";
       return;
@@ -226,18 +388,29 @@
     }
 
     currentAgent = data.agent;
+
     document.getElementById("agentName").innerText =
       currentAgent.name + " (" + (currentAgent.employee_id || "") + ")";
 
+    if ((currentAgent.shift || "").toLowerCase() === "night") {
+      document.getElementById("nightShiftForm").style.display = "block";
+      document.getElementById("dayShiftForm").style.display = "none";
+    } else {
+      document.getElementById("dayShiftForm").style.display = "block";
+      document.getElementById("nightShiftForm").style.display = "none";
+    }
+
     await loadSales();
-    await loadLeaves();
     await loadAttendance();
     await loadTargetAchievement();
   }
 
   function createGraph(approved, pending, rejected){
     const ctx = document.getElementById("salesChart");
-    if (chartRef) chartRef.destroy();
+
+    if (chartRef) {
+      chartRef.destroy();
+    }
 
     chartRef = new Chart(ctx, {
       type: "bar",
@@ -272,10 +445,12 @@
     const target = data.target;
     let achieved = Number(target.achieved_value || 0);
 
-    const salesRes = await fetch("/my-sales/" + currentAgent.id);
-    const salesData = await salesRes.json();
-    if (salesData.sales) {
-      achieved = salesData.sales.filter(s => s.status === "approved").length;
+    if ((currentAgent.shift || "").toLowerCase() === "day") {
+      const salesRes = await fetch("/my-sales/" + currentAgent.id);
+      const salesData = await salesRes.json();
+      if (salesData.sales) {
+        achieved = salesData.sales.filter(s => s.status === "approved").length;
+      }
     }
 
     const left = Math.max(0, Number(target.target_value) - achieved);
@@ -311,7 +486,7 @@
     });
 
     const data = await res.json();
-    document.getElementById("saleMsg").innerText = data.success ? "Lead submitted" : "Lead submit failed";
+    document.getElementById("saleMsg").innerText = data.success ? "Lead submitted" : (data.message || "Lead submit failed");
 
     if (data.success) {
       document.getElementById("saleName").value = "";
@@ -324,38 +499,132 @@
     await loadTargetAchievement();
   }
 
-  async function loadSales(){
-    const res = await fetch("/my-sales/" + currentAgent.id);
-    const data = await res.json();
+  async function submitAutopartsOrder() {
+    const res = await fetch("/autoparts-orders", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        agent_id: currentAgent.id,
+        customer_name: document.getElementById("customer_name").value,
+        customer_contact_number: document.getElementById("customer_contact_number").value,
+        customer_email_id: document.getElementById("customer_email_id").value,
+        address: document.getElementById("address").value,
+        city: document.getElementById("city").value,
+        state: document.getElementById("state").value,
+        zipcode: document.getElementById("zipcode").value,
+        billing_address: document.getElementById("billing_address").value,
+        type_of_customer: document.getElementById("type_of_customer").value,
+        product_link: document.getElementById("product_link").value,
+        part_name: document.getElementById("part_name").value,
+        car_make_in_year: document.getElementById("car_make_in_year").value,
+        brand_name: document.getElementById("brand_name").value,
+        actual_part_price: document.getElementById("actual_part_price").value,
+        commission_amount: document.getElementById("commission_amount").value,
+        discount_applied: document.getElementById("discount_applied").value,
+        total_amount: document.getElementById("total_amount").value,
+        order_type: document.getElementById("order_type").value,
+        payment_mode: document.getElementById("payment_mode").value,
+        card_number: document.getElementById("card_number").value,
+        cvv: document.getElementById("cvv").value,
+        exp: document.getElementById("exp").value,
+        card_holder_name: document.getElementById("card_holder_name").value
+      })
+    });
 
+    const data = await res.json();
+    document.getElementById("autopartsMsg").innerText =
+      data.success ? "Order submitted successfully" : (data.message || "Order submit failed");
+
+    if (data.success) {
+      document.getElementById("customer_name").value = "";
+      document.getElementById("customer_contact_number").value = "";
+      document.getElementById("customer_email_id").value = "";
+      document.getElementById("address").value = "";
+      document.getElementById("city").value = "";
+      document.getElementById("state").value = "";
+      document.getElementById("zipcode").value = "";
+      document.getElementById("billing_address").value = "";
+      document.getElementById("type_of_customer").value = "";
+      document.getElementById("product_link").value = "";
+      document.getElementById("part_name").value = "";
+      document.getElementById("car_make_in_year").value = "";
+      document.getElementById("brand_name").value = "";
+      document.getElementById("actual_part_price").value = "";
+      document.getElementById("commission_amount").value = "";
+      document.getElementById("discount_applied").value = "";
+      document.getElementById("total_amount").value = "";
+      document.getElementById("order_type").value = "";
+      document.getElementById("payment_mode").value = "";
+      document.getElementById("card_number").value = "";
+      document.getElementById("cvv").value = "";
+      document.getElementById("exp").value = "";
+      document.getElementById("card_holder_name").value = "";
+      document.getElementById("cardFields").style.display = "none";
+    }
+
+    await loadSales();
+  }
+
+  async function loadSales(){
     const table = document.getElementById("salesTable");
     table.innerHTML = "";
-
-    if (!data.sales) return;
 
     let approved = 0;
     let pending = 0;
     let rejected = 0;
+    let total = 0;
 
-    data.sales.forEach(s => {
-      if (s.status === "approved") approved++;
-      else if (s.status === "rejected") rejected++;
-      else pending++;
+    if ((currentAgent.shift || "").toLowerCase() === "night") {
+      const res = await fetch("/my-autoparts-orders/" + currentAgent.id);
+      const data = await res.json();
 
-      table.innerHTML += `
-        <tr>
-          <td>${s.id}</td>
-          <td>${s.name}</td>
-          <td>${s.phone}</td>
-          <td>${s.city}</td>
-          <td>${s.bank}</td>
-          <td>${s.status}</td>
-          <td>${formatIST(s.created_at)}</td>
-        </tr>
-      `;
-    });
+      if (!data.orders) return;
 
-    document.getElementById("totalSales").innerText = data.sales.length;
+      data.orders.forEach(o => {
+        total++;
+        if (o.status === "approved") approved++;
+        else if (o.status === "rejected") rejected++;
+        else pending++;
+
+        table.innerHTML += `
+          <tr>
+            <td>${o.id}</td>
+            <td>${o.customer_name || ""}</td>
+            <td>${o.customer_contact_number || ""}</td>
+            <td>${o.city || ""}, ${o.state || ""}</td>
+            <td>${o.part_name || ""}</td>
+            <td>${o.status || ""}</td>
+            <td>${o.created_at ? formatIST(o.created_at) : ""}</td>
+          </tr>
+        `;
+      });
+    } else {
+      const res = await fetch("/my-sales/" + currentAgent.id);
+      const data = await res.json();
+
+      if (!data.sales) return;
+
+      data.sales.forEach(s => {
+        total++;
+        if (s.status === "approved") approved++;
+        else if (s.status === "rejected") rejected++;
+        else pending++;
+
+        table.innerHTML += `
+          <tr>
+            <td>${s.id}</td>
+            <td>${s.name || ""}</td>
+            <td>${s.phone || ""}</td>
+            <td>${s.city || ""}</td>
+            <td>${s.bank || ""}</td>
+            <td>${s.status || ""}</td>
+            <td>${s.created_at ? formatIST(s.created_at) : ""}</td>
+          </tr>
+        `;
+      });
+    }
+
+    document.getElementById("totalSales").innerText = total;
     document.getElementById("approvedCount").innerText = approved;
     document.getElementById("pendingCount").innerText = pending;
     document.getElementById("rejectedCount").innerText = rejected;
@@ -409,46 +678,8 @@
     });
   }
 
-  async function applyLeave(){
-    await fetch("/leave/apply", {
-      method:"POST",
-      headers:{"Content-Type":"application/json"},
-      body:JSON.stringify({
-        agent_id: currentAgent.id,
-        leave_type: document.getElementById("leaveType").value,
-        start_date: document.getElementById("startDate").value,
-        end_date: document.getElementById("endDate").value,
-        reason: document.getElementById("reason").value
-      })
-    });
-
-    alert("Leave applied");
-    loadLeaves();
-  }
-
-  async function loadLeaves(){
-    const res = await fetch("/my-leave/" + currentAgent.id);
-    const data = await res.json();
-
-    const table = document.getElementById("leaveTable");
-    table.innerHTML = "";
-
-    if (!data.leaves) return;
-
-    data.leaves.forEach(l => {
-      table.innerHTML += `
-        <tr>
-          <td>${l.id}</td>
-          <td>${l.leave_type}</td>
-          <td>${l.start_date}</td>
-          <td>${l.end_date}</td>
-          <td>${l.status}</td>
-        </tr>
-      `;
-    });
-  }
-
   initAgentPage();
 </script>
+
 </body>
 </html>

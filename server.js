@@ -155,7 +155,7 @@ app.post("/create-agent", async (req, res) => {
   }
 });
 
-/* CREATE / SUBMIT LEAD */
+/* CREDIT CARD LEAD SUBMIT */
 app.post("/sales", async (req, res) => {
   try {
     const { agent_id, name, phone, city, bank } = req.body;
@@ -184,6 +184,134 @@ app.post("/sales", async (req, res) => {
     return res.status(500).json({
       success: false,
       message: "Lead submit failed"
+    });
+  }
+});
+
+/* AUTOPARTS ORDER SUBMIT */
+app.post("/autoparts-orders", async (req, res) => {
+  try {
+    const {
+      agent_id,
+      customer_name,
+      customer_contact_number,
+      customer_email_id,
+      address,
+      city,
+      state,
+      zipcode,
+      billing_address,
+      type_of_customer,
+      product_link,
+      part_name,
+      car_make_in_year,
+      brand_name,
+      actual_part_price,
+      commission_amount,
+      discount_applied,
+      total_amount,
+      order_type,
+      payment_mode,
+      card_number,
+      cvv,
+      exp,
+      card_holder_name
+    } = req.body;
+
+    if (
+      !agent_id ||
+      !customer_name ||
+      !customer_contact_number ||
+      !address ||
+      !city ||
+      !state ||
+      !zipcode ||
+      !billing_address ||
+      !type_of_customer ||
+      !product_link ||
+      !part_name ||
+      !car_make_in_year ||
+      !brand_name ||
+      !actual_part_price ||
+      !commission_amount ||
+      !total_amount ||
+      !order_type ||
+      !payment_mode
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "All required fields are required"
+      });
+    }
+
+    const result = await pool.query(
+      `INSERT INTO public.autoparts_orders (
+        agent_id,
+        customer_name,
+        customer_contact_number,
+        customer_email_id,
+        address,
+        city,
+        state,
+        zipcode,
+        billing_address,
+        type_of_customer,
+        product_link,
+        part_name,
+        car_make_in_year,
+        brand_name,
+        actual_part_price,
+        commission_amount,
+        discount_applied,
+        total_amount,
+        order_type,
+        payment_mode,
+        card_number,
+        cvv,
+        exp,
+        card_holder_name
+      ) VALUES (
+        $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,
+        $11,$12,$13,$14,$15,$16,$17,$18,$19,$20,
+        $21,$22,$23,$24
+      ) RETURNING *`,
+      [
+        agent_id,
+        customer_name,
+        customer_contact_number,
+        customer_email_id || null,
+        address,
+        city,
+        state,
+        zipcode,
+        billing_address,
+        type_of_customer,
+        product_link,
+        part_name,
+        car_make_in_year,
+        brand_name,
+        actual_part_price,
+        commission_amount,
+        discount_applied || 0,
+        total_amount,
+        order_type,
+        payment_mode,
+        card_number || null,
+        cvv || null,
+        exp || null,
+        card_holder_name || null
+      ]
+    );
+
+    return res.json({
+      success: true,
+      order: result.rows[0]
+    });
+  } catch (error) {
+    console.log("AUTOPARTS ORDER ERROR:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Autoparts order submit failed"
     });
   }
 });
@@ -222,7 +350,7 @@ app.get("/sales", async (req, res) => {
   }
 });
 
-/* GET MY LEADS FOR AGENT */
+/* GET MY CREDIT CARD LEADS */
 app.get("/my-sales/:agentId", async (req, res) => {
   try {
     const { agentId } = req.params;
@@ -245,34 +373,25 @@ app.get("/my-sales/:agentId", async (req, res) => {
   }
 });
 
-/* UPDATE SALE STATUS */
-app.put("/sale-status/:id", async (req, res) => {
+/* GET MY AUTOPARTS ORDERS */
+app.get("/my-autoparts-orders/:agentId", async (req, res) => {
   try {
-    const { id } = req.params;
-    const { status } = req.body;
-
-    const allowedStatuses = ["pending", "approved", "rejected"];
-    if (!allowedStatuses.includes(status)) {
-      return res.status(400).json({
-        success: false,
-        message: "Invalid status"
-      });
-    }
+    const { agentId } = req.params;
 
     const result = await pool.query(
-      "UPDATE public.credit_card_leads SET status=$1 WHERE id=$2 RETURNING *",
-      [status, id]
+      "SELECT * FROM public.autoparts_orders WHERE agent_id=$1 ORDER BY id DESC",
+      [agentId]
     );
 
     return res.json({
       success: true,
-      sale: result.rows[0]
+      orders: result.rows
     });
   } catch (error) {
-    console.log("SALE STATUS ERROR:", error);
+    console.log("MY AUTOPARTS ORDERS ERROR:", error);
     return res.status(500).json({
       success: false,
-      message: "Update status failed"
+      message: "Fetch my autoparts orders failed"
     });
   }
 });
@@ -281,13 +400,6 @@ app.put("/sale-status/:id", async (req, res) => {
 app.post("/attendance/check-in", async (req, res) => {
   try {
     const { agent_id } = req.body;
-
-    if (!agent_id) {
-      return res.status(400).json({
-        success: false,
-        message: "agent_id required"
-      });
-    }
 
     const existing = await pool.query(
       "SELECT * FROM public.attendance WHERE agent_id=$1 AND attendance_date=CURRENT_DATE LIMIT 1",
@@ -328,13 +440,6 @@ app.post("/attendance/check-out", async (req, res) => {
   try {
     const { agent_id } = req.body;
 
-    if (!agent_id) {
-      return res.status(400).json({
-        success: false,
-        message: "agent_id required"
-      });
-    }
-
     const result = await pool.query(
       `UPDATE public.attendance
        SET check_out=NOW()
@@ -364,38 +469,6 @@ app.post("/attendance/check-out", async (req, res) => {
   }
 });
 
-/* ALL ATTENDANCE FOR ADMIN */
-app.get("/attendance", async (req, res) => {
-  try {
-    const result = await pool.query(`
-      SELECT
-        at.id,
-        at.agent_id,
-        a.name AS agent_name,
-        a.employee_id,
-        at.attendance_date,
-        at.check_in,
-        at.check_out,
-        at.status,
-        at.created_at
-      FROM public.attendance at
-      LEFT JOIN public.agents a ON at.agent_id = a.id
-      ORDER BY at.id DESC
-    `);
-
-    return res.json({
-      success: true,
-      attendance: result.rows
-    });
-  } catch (error) {
-    console.log("GET ATTENDANCE ERROR:", error);
-    return res.status(500).json({
-      success: false,
-      message: "Fetch attendance failed"
-    });
-  }
-});
-
 /* MY ATTENDANCE */
 app.get("/my-attendance/:agentId", async (req, res) => {
   try {
@@ -415,191 +488,6 @@ app.get("/my-attendance/:agentId", async (req, res) => {
     return res.status(500).json({
       success: false,
       message: "Fetch my attendance failed"
-    });
-  }
-});
-
-/* APPLY LEAVE */
-app.post("/leave/apply", async (req, res) => {
-  try {
-    const { agent_id, leave_type, start_date, end_date, reason } = req.body;
-
-    const result = await pool.query(
-      `INSERT INTO public.leave_requests
-       (agent_id, leave_type, start_date, end_date, reason, status)
-       VALUES ($1,$2,$3,$4,$5,'pending')
-       RETURNING *`,
-      [agent_id, leave_type, start_date, end_date, reason]
-    );
-
-    return res.json({
-      success: true,
-      leave: result.rows[0]
-    });
-  } catch (error) {
-    console.log("APPLY LEAVE ERROR:", error);
-    return res.status(500).json({
-      success: false,
-      message: "Leave apply failed"
-    });
-  }
-});
-
-/* ALL LEAVES FOR ADMIN */
-app.get("/leave", async (req, res) => {
-  try {
-    const result = await pool.query(`
-      SELECT
-        lr.id,
-        lr.agent_id,
-        a.name AS agent_name,
-        a.employee_id,
-        lr.leave_type,
-        lr.start_date,
-        lr.end_date,
-        lr.reason,
-        lr.status,
-        lr.created_at
-      FROM public.leave_requests lr
-      LEFT JOIN public.agents a ON lr.agent_id = a.id
-      ORDER BY lr.id DESC
-    `);
-
-    return res.json({
-      success: true,
-      leaves: result.rows
-    });
-  } catch (error) {
-    console.log("GET LEAVES ERROR:", error);
-    return res.status(500).json({
-      success: false,
-      message: "Fetch leaves failed"
-    });
-  }
-});
-
-/* MY LEAVES */
-app.get("/my-leave/:agentId", async (req, res) => {
-  try {
-    const { agentId } = req.params;
-
-    const result = await pool.query(
-      "SELECT * FROM public.leave_requests WHERE agent_id=$1 ORDER BY id DESC",
-      [agentId]
-    );
-
-    return res.json({
-      success: true,
-      leaves: result.rows
-    });
-  } catch (error) {
-    console.log("MY LEAVES ERROR:", error);
-    return res.status(500).json({
-      success: false,
-      message: "Fetch my leaves failed"
-    });
-  }
-});
-
-/* UPDATE LEAVE STATUS */
-app.put("/leave-status/:id", async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { status } = req.body;
-
-    const result = await pool.query(
-      "UPDATE public.leave_requests SET status=$1 WHERE id=$2 RETURNING *",
-      [status, id]
-    );
-
-    return res.json({
-      success: true,
-      leave: result.rows[0]
-    });
-  } catch (error) {
-    console.log("LEAVE STATUS ERROR:", error);
-    return res.status(500).json({
-      success: false,
-      message: "Leave status update failed"
-    });
-  }
-});
-
-/* CREATE OR UPDATE TARGET */
-app.post("/targets", async (req, res) => {
-  try {
-    const { agent_id, shift, target_type, target_value, month_name } = req.body;
-
-    if (!agent_id || !shift || !target_type || !target_value || !month_name) {
-      return res.status(400).json({
-        success: false,
-        message: "All fields are required"
-      });
-    }
-
-    const existing = await pool.query(
-      "SELECT * FROM public.targets WHERE agent_id=$1 AND month_name=$2 LIMIT 1",
-      [agent_id, month_name]
-    );
-
-    if (existing.rows.length > 0) {
-      const updated = await pool.query(
-        `UPDATE public.targets
-         SET shift=$1, target_type=$2, target_value=$3
-         WHERE agent_id=$4 AND month_name=$5
-         RETURNING *`,
-        [shift, target_type, target_value, agent_id, month_name]
-      );
-
-      return res.json({
-        success: true,
-        target: updated.rows[0]
-      });
-    }
-
-    const result = await pool.query(
-      `INSERT INTO public.targets
-       (agent_id, shift, target_type, target_value, month_name, achieved_value)
-       VALUES ($1,$2,$3,$4,$5,0)
-       RETURNING *`,
-      [agent_id, shift, target_type, target_value, month_name]
-    );
-
-    return res.json({
-      success: true,
-      target: result.rows[0]
-    });
-  } catch (error) {
-    console.log("TARGET SAVE ERROR:", error);
-    return res.status(500).json({
-      success: false,
-      message: "Target save failed"
-    });
-  }
-});
-
-/* ALL TARGETS */
-app.get("/targets", async (req, res) => {
-  try {
-    const result = await pool.query(`
-      SELECT
-        t.*,
-        a.name AS agent_name,
-        a.employee_id
-      FROM public.targets t
-      LEFT JOIN public.agents a ON t.agent_id = a.id
-      ORDER BY t.id DESC
-    `);
-
-    return res.json({
-      success: true,
-      targets: result.rows
-    });
-  } catch (error) {
-    console.log("GET TARGETS ERROR:", error);
-    return res.status(500).json({
-      success: false,
-      message: "Fetch targets failed"
     });
   }
 });
@@ -630,30 +518,6 @@ app.get("/my-target/:agentId", async (req, res) => {
     return res.status(500).json({
       success: false,
       message: "Fetch target failed"
-    });
-  }
-});
-
-/* UPDATE ACHIEVED TARGET */
-app.put("/targets/achieved/:agentId", async (req, res) => {
-  try {
-    const { agentId } = req.params;
-    const { achieved_value } = req.body;
-
-    const result = await pool.query(
-      "UPDATE public.targets SET achieved_value=$1 WHERE agent_id=$2 RETURNING *",
-      [achieved_value, agentId]
-    );
-
-    return res.json({
-      success: true,
-      target: result.rows[0]
-    });
-  } catch (error) {
-    console.log("TARGET ACHIEVED ERROR:", error);
-    return res.status(500).json({
-      success: false,
-      message: "Update achieved target failed"
     });
   }
 });
