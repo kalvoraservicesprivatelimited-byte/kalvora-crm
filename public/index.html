@@ -112,8 +112,66 @@
       padding:10px 18px;
       margin-top:0;
     }
+    .small-btn{
+      width:auto;
+      padding:8px 12px;
+      margin-top:0;
+    }
     .action-select{
       min-width:130px;
+    }
+    .modal-overlay{
+      position:fixed;
+      inset:0;
+      background:rgba(0,0,0,0.45);
+      display:none;
+      align-items:center;
+      justify-content:center;
+      padding:20px;
+      z-index:9999;
+    }
+    .modal{
+      background:#fff;
+      width:min(900px, 100%);
+      max-height:90vh;
+      overflow:auto;
+      border-radius:12px;
+      padding:20px;
+      box-shadow:0 10px 30px rgba(0,0,0,.2);
+    }
+    .modal-header{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:10px;
+      margin-bottom:15px;
+    }
+    .close-btn{
+      width:auto;
+      background:#111827;
+      padding:8px 14px;
+      margin-top:0;
+    }
+    .details-grid{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:12px 20px;
+    }
+    .detail-box{
+      background:#f8fafc;
+      border:1px solid #e5e7eb;
+      border-radius:8px;
+      padding:10px 12px;
+    }
+    .detail-label{
+      font-size:12px;
+      color:#6b7280;
+      margin-bottom:4px;
+    }
+    .detail-value{
+      font-size:14px;
+      color:#111827;
+      word-break:break-word;
     }
     @media(max-width:1100px){
       .grid2{
@@ -122,6 +180,9 @@
       table{
         display:block;
         overflow-x:auto;
+      }
+      .details-grid{
+        grid-template-columns:1fr;
       }
     }
   </style>
@@ -250,6 +311,7 @@
                 <th>City</th>
                 <th>Bank</th>
                 <th>Status</th>
+                <th>View</th>
                 <th>Update Status</th>
               </tr>
             </thead>
@@ -278,6 +340,7 @@
                 <th>Total</th>
                 <th>Payment</th>
                 <th>Status</th>
+                <th>View</th>
                 <th>Update Status</th>
               </tr>
             </thead>
@@ -338,11 +401,24 @@
   </div>
 </div>
 
+<div id="detailsModalOverlay" class="modal-overlay">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="detailsModalTitle" style="margin:0;">Lead Details</h3>
+      <button class="close-btn" onclick="closeDetailsModal()">Close</button>
+    </div>
+    <div id="detailsModalBody" class="details-grid"></div>
+  </div>
+</div>
+
 <script>
   const user = JSON.parse(localStorage.getItem("user"));
   if (!user || user.role !== "admin") {
     window.location.href = "/login.html";
   }
+
+  let salesCache = [];
+  let autopartsCache = [];
 
   function showSection(id){
     document.querySelectorAll(".section").forEach(sec => sec.classList.remove("active"));
@@ -357,6 +433,77 @@
   function formatDateTime(value){
     if (!value) return "";
     return new Date(value).toLocaleString("en-IN", { timeZone: "Asia/Kolkata" });
+  }
+
+  function openDetailsModal(title, rows) {
+    document.getElementById("detailsModalTitle").innerText = title;
+    const body = document.getElementById("detailsModalBody");
+    body.innerHTML = rows.map(item => `
+      <div class="detail-box">
+        <div class="detail-label">${item.label}</div>
+        <div class="detail-value">${item.value ?? ""}</div>
+      </div>
+    `).join("");
+    document.getElementById("detailsModalOverlay").style.display = "flex";
+  }
+
+  function closeDetailsModal() {
+    document.getElementById("detailsModalOverlay").style.display = "none";
+  }
+
+  function viewCreditLead(index) {
+    const s = salesCache[index];
+    if (!s) return;
+
+    openDetailsModal("Credit Card Lead Details", [
+      { label: "Lead ID", value: s.id },
+      { label: "Employee ID", value: s.employee_id || "" },
+      { label: "Agent Name", value: s.agent_name || "" },
+      { label: "Agent Shift", value: s.shift || "" },
+      { label: "Customer Name", value: s.customer_name || "" },
+      { label: "Phone", value: s.phone || "" },
+      { label: "City", value: s.city || "" },
+      { label: "Bank", value: s.bank || "" },
+      { label: "Status", value: s.status || "" },
+      { label: "Submitted At", value: formatDateTime(s.created_at) }
+    ]);
+  }
+
+  function viewAutopartsOrder(index) {
+    const o = autopartsCache[index];
+    if (!o) return;
+
+    openDetailsModal("Autoparts Order Details", [
+      { label: "Order ID", value: o.id },
+      { label: "Employee ID", value: o.employee_id || "" },
+      { label: "Agent Name", value: o.agent_name || "" },
+      { label: "Agent Shift", value: o.shift || "" },
+      { label: "Customer Name", value: o.customer_name || "" },
+      { label: "Customer Contact Number", value: o.customer_contact_number || "" },
+      { label: "Customer Email ID", value: o.customer_email_id || "" },
+      { label: "Address", value: o.address || "" },
+      { label: "City", value: o.city || "" },
+      { label: "State", value: o.state || "" },
+      { label: "Zipcode", value: o.zipcode || "" },
+      { label: "Billing Address", value: o.billing_address || "" },
+      { label: "Type of Customer", value: o.type_of_customer || "" },
+      { label: "Product Link", value: o.product_link || "" },
+      { label: "Part Name", value: o.part_name || "" },
+      { label: "Car Make In Year", value: o.car_make_in_year || "" },
+      { label: "Brand Name / Manufacturer", value: o.brand_name || "" },
+      { label: "Actual Part Price", value: o.actual_part_price || "" },
+      { label: "Commission Amount ($)", value: o.commission_amount || "" },
+      { label: "Discount Applied", value: o.discount_applied || "" },
+      { label: "Total Amount", value: o.total_amount || "" },
+      { label: "Order Type", value: o.order_type || "" },
+      { label: "Payment Mode", value: o.payment_mode || "" },
+      { label: "Card Number", value: o.card_number || "" },
+      { label: "CVV", value: o.cvv || "" },
+      { label: "Exp", value: o.exp || "" },
+      { label: "Card Holder Name", value: o.card_holder_name || "" },
+      { label: "Status", value: o.status || "" },
+      { label: "Submitted At", value: formatDateTime(o.created_at) }
+    ]);
   }
 
   async function createAgent(){
@@ -495,13 +642,14 @@
 
       const table = document.getElementById("salesTableAdmin");
       table.innerHTML = "";
+      salesCache = data.sales || [];
 
       if (!data.success || !data.sales || data.sales.length === 0) {
-        table.innerHTML = `<tr><td colspan="9">No leads found</td></tr>`;
+        table.innerHTML = `<tr><td colspan="10">No leads found</td></tr>`;
         return;
       }
 
-      data.sales.forEach(s => {
+      data.sales.forEach((s, index) => {
         table.innerHTML += `
           <tr>
             <td>${s.id || ""}</td>
@@ -512,6 +660,7 @@
             <td>${s.city || ""}</td>
             <td>${s.bank || ""}</td>
             <td>${s.status || ""}</td>
+            <td><button class="small-btn" onclick="viewCreditLead(${index})">View</button></td>
             <td>
               <select class="action-select" onchange="updateSaleStatus(${s.id}, this.value)">
                 <option value="">Select</option>
@@ -525,7 +674,7 @@
       });
     } catch (error) {
       console.log("LOAD SALES ERROR:", error);
-      document.getElementById("salesTableAdmin").innerHTML = `<tr><td colspan="9">Failed to load leads</td></tr>`;
+      document.getElementById("salesTableAdmin").innerHTML = `<tr><td colspan="10">Failed to load leads</td></tr>`;
     }
   }
 
@@ -559,13 +708,14 @@
 
       const table = document.getElementById("autopartsOrdersTable");
       table.innerHTML = "";
+      autopartsCache = data.orders || [];
 
       if (!data.success || !data.orders || data.orders.length === 0) {
-        table.innerHTML = `<tr><td colspan="11">No autoparts orders found</td></tr>`;
+        table.innerHTML = `<tr><td colspan="12">No autoparts orders found</td></tr>`;
         return;
       }
 
-      data.orders.forEach(o => {
+      data.orders.forEach((o, index) => {
         table.innerHTML += `
           <tr>
             <td>${o.id || ""}</td>
@@ -578,6 +728,7 @@
             <td>${o.total_amount || ""}</td>
             <td>${o.payment_mode || ""}</td>
             <td>${o.status || ""}</td>
+            <td><button class="small-btn" onclick="viewAutopartsOrder(${index})">View</button></td>
             <td>
               <select class="action-select" onchange="updateAutopartsOrderStatus(${o.id}, this.value)">
                 <option value="">Select</option>
@@ -591,7 +742,7 @@
       });
     } catch (error) {
       console.log("LOAD AUTOPARTS ORDERS ERROR:", error);
-      document.getElementById("autopartsOrdersTable").innerHTML = `<tr><td colspan="11">Failed to load autoparts orders</td></tr>`;
+      document.getElementById("autopartsOrdersTable").innerHTML = `<tr><td colspan="12">Failed to load autoparts orders</td></tr>`;
     }
   }
 
