@@ -3,25 +3,127 @@
 <head>
   <title>Kalvora Admin</title>
   <style>
-    body{margin:0;font-family:Arial;background:#f3f6fb}
-    .crm{display:flex;height:100vh}
-    .sidebar{width:230px;background:#111827;color:#fff;padding:25px}
-    .sidebar h2{margin-bottom:30px}
-    .sidebar li{list-style:none;padding:12px;border-radius:6px;margin-bottom:8px;cursor:pointer}
-    .sidebar li:hover{background:#1f2937}
-    .main{flex:1;display:flex;flex-direction:column}
-    .topbar{height:60px;background:#fff;display:flex;align-items:center;justify-content:space-between;padding:0 25px;box-shadow:0 2px 6px rgba(0,0,0,.05)}
-    .content{padding:25px;overflow:auto}
-    .card{background:#fff;padding:20px;border-radius:10px;margin-bottom:20px;box-shadow:0 3px 10px rgba(0,0,0,.05)}
-    .grid2{display:grid;grid-template-columns:1fr 1fr;gap:20px}
-    input,select{width:100%;padding:10px;margin-top:10px;border-radius:6px;border:1px solid #ddd;box-sizing:border-box}
-    button{background:#2563eb;color:#fff;border:none;padding:10px;margin-top:10px;border-radius:6px;cursor:pointer;width:100%}
-    table{width:100%;border-collapse:collapse;margin-top:15px}
-    th{background:#111827;color:#fff;padding:12px;text-align:left}
-    td{padding:12px;border-bottom:1px solid #eee}
-    .section{display:none}
-    .active{display:block}
-    .logout-btn{width:auto;background:#dc2626;padding:8px 14px;margin-top:0}
+    body{
+      margin:0;
+      font-family:Arial, sans-serif;
+      background:#f3f6fb;
+    }
+    .crm{
+      display:flex;
+      height:100vh;
+    }
+    .sidebar{
+      width:230px;
+      background:#111827;
+      color:#fff;
+      padding:25px;
+    }
+    .sidebar h2{
+      margin-bottom:30px;
+    }
+    .sidebar li{
+      list-style:none;
+      padding:12px;
+      border-radius:6px;
+      margin-bottom:8px;
+      cursor:pointer;
+    }
+    .sidebar li:hover{
+      background:#1f2937;
+    }
+    .main{
+      flex:1;
+      display:flex;
+      flex-direction:column;
+    }
+    .topbar{
+      height:60px;
+      background:#fff;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      padding:0 25px;
+      box-shadow:0 2px 6px rgba(0,0,0,.05);
+    }
+    .content{
+      padding:25px;
+      overflow:auto;
+    }
+    .card{
+      background:#fff;
+      padding:20px;
+      border-radius:10px;
+      margin-bottom:20px;
+      box-shadow:0 3px 10px rgba(0,0,0,.05);
+    }
+    .grid2{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:20px;
+    }
+    input,select{
+      width:100%;
+      padding:10px;
+      margin-top:10px;
+      border-radius:6px;
+      border:1px solid #ddd;
+      box-sizing:border-box;
+    }
+    button{
+      background:#2563eb;
+      color:#fff;
+      border:none;
+      padding:10px;
+      margin-top:10px;
+      border-radius:6px;
+      cursor:pointer;
+      width:100%;
+    }
+    table{
+      width:100%;
+      border-collapse:collapse;
+      margin-top:15px;
+    }
+    th{
+      background:#111827;
+      color:#fff;
+      padding:12px;
+      text-align:left;
+    }
+    td{
+      padding:12px;
+      border-bottom:1px solid #eee;
+      vertical-align:top;
+    }
+    .section{
+      display:none;
+    }
+    .active{
+      display:block;
+    }
+    .logout-btn{
+      width:auto;
+      background:#dc2626;
+      padding:8px 14px;
+      margin-top:0;
+    }
+    .refresh-btn{
+      width:auto;
+      padding:10px 18px;
+      margin-top:0;
+    }
+    .action-select{
+      min-width:130px;
+    }
+    @media(max-width:1000px){
+      .grid2{
+        grid-template-columns:1fr;
+      }
+      table{
+        display:block;
+        overflow-x:auto;
+      }
+    }
   </style>
 </head>
 <body>
@@ -101,7 +203,10 @@
           </div>
 
           <div class="card">
-            <h3>All Targets</h3>
+            <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;">
+              <h3 style="margin:0;">All Targets</h3>
+              <button class="refresh-btn" onclick="loadTargets()">Refresh Targets</button>
+            </div>
             <table>
               <thead>
                 <tr>
@@ -123,7 +228,11 @@
 
       <div id="salesSection" class="section">
         <div class="card">
-          <h3>All Leads</h3>
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;">
+            <h3 style="margin:0;">All Leads</h3>
+            <button class="refresh-btn" onclick="loadSalesAdmin()">Refresh Leads</button>
+          </div>
+
           <table>
             <thead>
               <tr>
@@ -135,7 +244,7 @@
                 <th>City</th>
                 <th>Bank</th>
                 <th>Status</th>
-                <th>Action</th>
+                <th>Update Status</th>
               </tr>
             </thead>
             <tbody id="salesTableAdmin"></tbody>
@@ -145,7 +254,10 @@
 
       <div id="attendanceSection" class="section">
         <div class="card">
-          <h3>Attendance</h3>
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;">
+            <h3 style="margin:0;">Attendance</h3>
+            <button class="refresh-btn" onclick="loadAttendance()">Refresh Attendance</button>
+          </div>
           <table>
             <thead>
               <tr>
@@ -165,7 +277,10 @@
 
       <div id="leavesSection" class="section">
         <div class="card">
-          <h3>Leaves</h3>
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;">
+            <h3 style="margin:0;">Leaves</h3>
+            <button class="refresh-btn" onclick="loadLeaves()">Refresh Leaves</button>
+          </div>
           <table>
             <thead>
               <tr>
@@ -205,208 +320,291 @@
     window.location.href = "/login.html";
   }
 
+  function formatDateTime(value){
+    if (!value) return "";
+    return new Date(value).toLocaleString("en-IN", { timeZone: "Asia/Kolkata" });
+  }
+
   async function createAgent(){
-    const res = await fetch("/create-agent", {
-      method:"POST",
-      headers:{"Content-Type":"application/json"},
-      body: JSON.stringify({
-        employee_id: document.getElementById("employee_id").value,
-        name: document.getElementById("agent_name").value,
-        email: document.getElementById("agent_email").value,
-        phone: document.getElementById("agent_phone").value,
-        password: document.getElementById("agent_password").value,
-        shift: document.getElementById("agent_shift").value
-      })
-    });
+    try {
+      const res = await fetch("/create-agent", {
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body: JSON.stringify({
+          employee_id: document.getElementById("employee_id").value.trim(),
+          name: document.getElementById("agent_name").value.trim(),
+          email: document.getElementById("agent_email").value.trim(),
+          phone: document.getElementById("agent_phone").value.trim(),
+          password: document.getElementById("agent_password").value.trim(),
+          shift: document.getElementById("agent_shift").value
+        })
+      });
 
-    const data = await res.json();
-    document.getElementById("agentMsg").innerText = data.success ? "Agent created" : (data.message || "Failed");
+      const data = await res.json();
+      document.getElementById("agentMsg").innerText = data.success ? "Agent created" : (data.message || "Failed");
 
-    if (data.success) {
-      document.getElementById("employee_id").value = "";
-      document.getElementById("agent_name").value = "";
-      document.getElementById("agent_email").value = "";
-      document.getElementById("agent_phone").value = "";
-      document.getElementById("agent_password").value = "";
-      document.getElementById("agent_shift").value = "day";
-      await loadAgents();
+      if (data.success) {
+        document.getElementById("employee_id").value = "";
+        document.getElementById("agent_name").value = "";
+        document.getElementById("agent_email").value = "";
+        document.getElementById("agent_phone").value = "";
+        document.getElementById("agent_password").value = "";
+        document.getElementById("agent_shift").value = "day";
+        await loadAgents();
+      }
+    } catch (error) {
+      console.log("CREATE AGENT ERROR:", error);
+      document.getElementById("agentMsg").innerText = "Failed";
     }
   }
 
   async function loadAgents(){
-    const res = await fetch("/agents");
-    const data = await res.json();
+    try {
+      const res = await fetch("/agents");
+      const data = await res.json();
 
-    const table = document.getElementById("agentsTable");
-    const select = document.getElementById("target_agent_id");
-    table.innerHTML = "";
-    select.innerHTML = "";
+      const table = document.getElementById("agentsTable");
+      const select = document.getElementById("target_agent_id");
 
-    if (!data.success) return;
+      table.innerHTML = "";
+      select.innerHTML = "";
 
-    data.agents.forEach(a => {
-      table.innerHTML += `
-        <tr>
-          <td>${a.id}</td>
-          <td>${a.employee_id}</td>
-          <td>${a.name}</td>
-          <td>${a.email}</td>
-          <td>${a.phone}</td>
-          <td>${a.shift}</td>
-        </tr>
-      `;
+      if (!data.success || !data.agents) {
+        table.innerHTML = `<tr><td colspan="6">No agents found</td></tr>`;
+        return;
+      }
 
-      select.innerHTML += `<option value="${a.id}">${a.employee_id} - ${a.name}</option>`;
-    });
+      data.agents.forEach(a => {
+        table.innerHTML += `
+          <tr>
+            <td>${a.id || ""}</td>
+            <td>${a.employee_id || ""}</td>
+            <td>${a.name || ""}</td>
+            <td>${a.email || ""}</td>
+            <td>${a.phone || ""}</td>
+            <td>${a.shift || ""}</td>
+          </tr>
+        `;
+
+        select.innerHTML += `<option value="${a.id}">${a.employee_id} - ${a.name}</option>`;
+      });
+    } catch (error) {
+      console.log("LOAD AGENTS ERROR:", error);
+    }
   }
 
   async function saveTarget(){
-    const res = await fetch("/targets", {
-      method:"POST",
-      headers:{"Content-Type":"application/json"},
-      body: JSON.stringify({
-        agent_id: document.getElementById("target_agent_id").value,
-        shift: document.getElementById("target_shift").value,
-        target_type: document.getElementById("target_type").value,
-        target_value: document.getElementById("target_value").value,
-        month_name: document.getElementById("month_name").value
-      })
-    });
+    try {
+      const res = await fetch("/targets", {
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body: JSON.stringify({
+          agent_id: document.getElementById("target_agent_id").value,
+          shift: document.getElementById("target_shift").value,
+          target_type: document.getElementById("target_type").value,
+          target_value: document.getElementById("target_value").value,
+          month_name: document.getElementById("month_name").value.trim()
+        })
+      });
 
-    const data = await res.json();
-    document.getElementById("targetMsg").innerText = data.success ? "Target saved" : (data.message || "Failed");
-    if (data.success) {
-      document.getElementById("target_value").value = "";
-      document.getElementById("month_name").value = "";
-      await loadTargets();
+      const data = await res.json();
+      document.getElementById("targetMsg").innerText = data.success ? "Target saved" : (data.message || "Failed");
+
+      if (data.success) {
+        document.getElementById("target_value").value = "";
+        document.getElementById("month_name").value = "";
+        await loadTargets();
+      }
+    } catch (error) {
+      console.log("SAVE TARGET ERROR:", error);
+      document.getElementById("targetMsg").innerText = "Failed";
     }
   }
 
   async function loadTargets(){
-    const res = await fetch("/targets");
-    const data = await res.json();
+    try {
+      const res = await fetch("/targets");
+      const data = await res.json();
 
-    const table = document.getElementById("targetsTable");
-    table.innerHTML = "";
+      const table = document.getElementById("targetsTable");
+      table.innerHTML = "";
 
-    if (!data.success) return;
+      if (!data.success || !data.targets || data.targets.length === 0) {
+        table.innerHTML = `<tr><td colspan="8">No targets found</td></tr>`;
+        return;
+      }
 
-    data.targets.forEach(t => {
-      table.innerHTML += `
-        <tr>
-          <td>${t.id}</td>
-          <td>${t.employee_id || ""}</td>
-          <td>${t.agent_name || ""}</td>
-          <td>${t.month_name || ""}</td>
-          <td>${t.shift || ""}</td>
-          <td>${t.target_type || ""}</td>
-          <td>${t.target_value || 0}</td>
-          <td>${t.achieved_value || 0}</td>
-        </tr>
-      `;
-    });
+      data.targets.forEach(t => {
+        table.innerHTML += `
+          <tr>
+            <td>${t.id || ""}</td>
+            <td>${t.employee_id || ""}</td>
+            <td>${t.agent_name || ""}</td>
+            <td>${t.month_name || ""}</td>
+            <td>${t.shift || ""}</td>
+            <td>${t.target_type || ""}</td>
+            <td>${t.target_value || 0}</td>
+            <td>${t.achieved_value || 0}</td>
+          </tr>
+        `;
+      });
+    } catch (error) {
+      console.log("LOAD TARGETS ERROR:", error);
+      document.getElementById("targetsTable").innerHTML = `<tr><td colspan="8">Failed to load targets</td></tr>`;
+    }
   }
 
   async function loadSalesAdmin(){
-    const res = await fetch("/sales");
-    const data = await res.json();
+    try {
+      const res = await fetch("/sales");
+      const data = await res.json();
 
-    const table = document.getElementById("salesTableAdmin");
-    table.innerHTML = "";
+      const table = document.getElementById("salesTableAdmin");
+      table.innerHTML = "";
 
-    if (!data.success) return;
+      if (!data.success || !data.sales || data.sales.length === 0) {
+        table.innerHTML = `<tr><td colspan="9">No leads found</td></tr>`;
+        return;
+      }
 
-    data.sales.forEach(s => {
-      table.innerHTML += `
-        <tr>
-          <td>${s.id}</td>
-          <td>${s.employee_id || ""}</td>
-          <td>${s.agent_name || ""}</td>
-          <td>${s.customer_name || ""}</td>
-          <td>${s.phone || ""}</td>
-          <td>${s.city || ""}</td>
-          <td>${s.bank || ""}</td>
-          <td>${s.status || ""}</td>
-          <td>
-            <button onclick="updateSaleStatus(${s.id}, 'approved')">Approve</button>
-            <button onclick="updateSaleStatus(${s.id}, 'rejected')">Reject</button>
-            <button onclick="updateSaleStatus(${s.id}, 'pending')">Pending</button>
-          </td>
-        </tr>
-      `;
-    });
+      data.sales.forEach(s => {
+        table.innerHTML += `
+          <tr>
+            <td>${s.id || ""}</td>
+            <td>${s.employee_id || ""}</td>
+            <td>${s.agent_name || ""}</td>
+            <td>${s.customer_name || ""}</td>
+            <td>${s.phone || ""}</td>
+            <td>${s.city || ""}</td>
+            <td>${s.bank || ""}</td>
+            <td>${s.status || ""}</td>
+            <td>
+              <select class="action-select" onchange="updateSaleStatus(${s.id}, this.value)">
+                <option value="">Select</option>
+                <option value="pending" ${s.status === "pending" ? "selected" : ""}>Pending</option>
+                <option value="approved" ${s.status === "approved" ? "selected" : ""}>Approved</option>
+                <option value="rejected" ${s.status === "rejected" ? "selected" : ""}>Rejected</option>
+              </select>
+            </td>
+          </tr>
+        `;
+      });
+    } catch (error) {
+      console.log("LOAD SALES ERROR:", error);
+      document.getElementById("salesTableAdmin").innerHTML = `<tr><td colspan="9">Failed to load leads</td></tr>`;
+    }
   }
 
   async function updateSaleStatus(id, status){
-    await fetch("/sale-status/" + id, {
-      method:"PUT",
-      headers:{"Content-Type":"application/json"},
-      body: JSON.stringify({ status })
-    });
-    loadSalesAdmin();
+    if (!status) return;
+
+    try {
+      const res = await fetch("/sale-status/" + id, {
+        method:"PUT",
+        headers:{"Content-Type":"application/json"},
+        body: JSON.stringify({ status })
+      });
+
+      const data = await res.json();
+
+      if (!data.success) {
+        alert(data.message || "Status update failed");
+      }
+
+      await loadSalesAdmin();
+    } catch (error) {
+      console.log("UPDATE SALE STATUS ERROR:", error);
+      alert("Status update failed");
+    }
   }
 
   async function loadAttendance(){
-    const res = await fetch("/attendance");
-    const data = await res.json();
+    try {
+      const res = await fetch("/attendance");
+      const data = await res.json();
 
-    const table = document.getElementById("attendanceTable");
-    table.innerHTML = "";
+      const table = document.getElementById("attendanceTable");
+      table.innerHTML = "";
 
-    if (!data.success) return;
+      if (!data.success || !data.attendance || data.attendance.length === 0) {
+        table.innerHTML = `<tr><td colspan="7">No attendance found</td></tr>`;
+        return;
+      }
 
-    data.attendance.forEach(a => {
-      table.innerHTML += `
-        <tr>
-          <td>${a.id}</td>
-          <td>${a.employee_id || ""}</td>
-          <td>${a.agent_name || ""}</td>
-          <td>${a.attendance_date || ""}</td>
-          <td>${a.check_in ? new Date(a.check_in).toLocaleString("en-IN",{timeZone:"Asia/Kolkata"}) : ""}</td>
-          <td>${a.check_out ? new Date(a.check_out).toLocaleString("en-IN",{timeZone:"Asia/Kolkata"}) : ""}</td>
-          <td>${a.status || ""}</td>
-        </tr>
-      `;
-    });
+      data.attendance.forEach(a => {
+        table.innerHTML += `
+          <tr>
+            <td>${a.id || ""}</td>
+            <td>${a.employee_id || ""}</td>
+            <td>${a.agent_name || ""}</td>
+            <td>${a.attendance_date || ""}</td>
+            <td>${formatDateTime(a.check_in)}</td>
+            <td>${formatDateTime(a.check_out)}</td>
+            <td>${a.status || ""}</td>
+          </tr>
+        `;
+      });
+    } catch (error) {
+      console.log("LOAD ATTENDANCE ERROR:", error);
+      document.getElementById("attendanceTable").innerHTML = `<tr><td colspan="7">Failed to load attendance</td></tr>`;
+    }
   }
 
   async function loadLeaves(){
-    const res = await fetch("/leave");
-    const data = await res.json();
+    try {
+      const res = await fetch("/leave");
+      const data = await res.json();
 
-    const table = document.getElementById("leavesTable");
-    table.innerHTML = "";
+      const table = document.getElementById("leavesTable");
+      table.innerHTML = "";
 
-    if (!data.success) return;
+      if (!data.success || !data.leaves || data.leaves.length === 0) {
+        table.innerHTML = `<tr><td colspan="9">No leaves found</td></tr>`;
+        return;
+      }
 
-    data.leaves.forEach(l => {
-      table.innerHTML += `
-        <tr>
-          <td>${l.id}</td>
-          <td>${l.employee_id || ""}</td>
-          <td>${l.agent_name || ""}</td>
-          <td>${l.leave_type || ""}</td>
-          <td>${l.start_date || ""}</td>
-          <td>${l.end_date || ""}</td>
-          <td>${l.reason || ""}</td>
-          <td>${l.status || ""}</td>
-          <td>
-            <button onclick="updateLeaveStatus(${l.id}, 'approved')">Approve</button>
-            <button onclick="updateLeaveStatus(${l.id}, 'rejected')">Reject</button>
-            <button onclick="updateLeaveStatus(${l.id}, 'pending')">Pending</button>
-          </td>
-        </tr>
-      `;
-    });
+      data.leaves.forEach(l => {
+        table.innerHTML += `
+          <tr>
+            <td>${l.id || ""}</td>
+            <td>${l.employee_id || ""}</td>
+            <td>${l.agent_name || ""}</td>
+            <td>${l.leave_type || ""}</td>
+            <td>${l.start_date || ""}</td>
+            <td>${l.end_date || ""}</td>
+            <td>${l.reason || ""}</td>
+            <td>${l.status || ""}</td>
+            <td>
+              <select class="action-select" onchange="updateLeaveStatus(${l.id}, this.value)">
+                <option value="">Select</option>
+                <option value="pending" ${l.status === "pending" ? "selected" : ""}>Pending</option>
+                <option value="approved" ${l.status === "approved" ? "selected" : ""}>Approved</option>
+                <option value="rejected" ${l.status === "rejected" ? "selected" : ""}>Rejected</option>
+              </select>
+            </td>
+          </tr>
+        `;
+      });
+    } catch (error) {
+      console.log("LOAD LEAVES ERROR:", error);
+      document.getElementById("leavesTable").innerHTML = `<tr><td colspan="9">Failed to load leaves</td></tr>`;
+    }
   }
 
   async function updateLeaveStatus(id, status){
-    await fetch("/leave-status/" + id, {
-      method:"PUT",
-      headers:{"Content-Type":"application/json"},
-      body: JSON.stringify({ status })
-    });
-    loadLeaves();
+    if (!status) return;
+
+    try {
+      await fetch("/leave-status/" + id, {
+        method:"PUT",
+        headers:{"Content-Type":"application/json"},
+        body: JSON.stringify({ status })
+      });
+
+      await loadLeaves();
+    } catch (error) {
+      console.log("UPDATE LEAVE STATUS ERROR:", error);
+    }
   }
 
   async function initAdmin(){
