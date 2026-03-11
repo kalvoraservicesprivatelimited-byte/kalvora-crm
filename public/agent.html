@@ -156,7 +156,7 @@
     <div class="topbar">
       <div>Agent Panel</div>
       <div class="top-right">
-        <div id="agentName"></div>
+        <div id="agentName">Agent</div>
         <button class="logout-btn" onclick="logout()">Logout</button>
       </div>
     </div>
@@ -359,26 +359,17 @@
       return;
     }
 
-    document.getElementById("agentName").innerText =
-      (user.username || "Agent");
-
     try {
-      const res = await fetch("/agents");
+      const res = await fetch("/my-agent/" + encodeURIComponent(user.username));
       const data = await res.json();
 
-      if (data.success && data.agents) {
-        currentAgent = data.agents.find(a => a.employee_id === user.username);
-
-        if (!currentAgent) {
-          alert("Agent details not found");
-          window.location.href = "/login.html";
-          return;
-        }
-      } else {
-        alert("Unable to load agent details");
+      if(!data.success || !data.agent){
+        alert("Agent details not found");
         window.location.href = "/login.html";
         return;
       }
+
+      currentAgent = data.agent;
 
       document.getElementById("agentName").innerText =
         currentAgent.name + " (" + (currentAgent.employee_id || "") + ")";
@@ -436,7 +427,6 @@
       }
 
       const target = data.target;
-
       let achieved = Number(target.achieved_value || 0);
 
       if (target.shift === "day") {
