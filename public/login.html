@@ -4,24 +4,26 @@
   <title>CRM Login</title>
   <style>
     body {
-      font-family: Arial;
+      font-family: Arial, sans-serif;
       background: #f4f6f9;
       display: flex;
       justify-content: center;
       align-items: center;
       height: 100vh;
+      margin: 0;
     }
 
     .login-box {
       background: white;
       padding: 30px;
       border-radius: 8px;
-      width: 300px;
-      box-shadow: 0px 0px 10px rgba(0,0,0,0.1);
+      width: 320px;
+      box-shadow: 0 0 12px rgba(0,0,0,0.12);
     }
 
     h2 {
       text-align: center;
+      margin-bottom: 20px;
     }
 
     input {
@@ -30,6 +32,7 @@
       margin-top: 10px;
       border: 1px solid #ccc;
       border-radius: 4px;
+      box-sizing: border-box;
     }
 
     button {
@@ -51,6 +54,7 @@
       margin-top: 10px;
       text-align: center;
       color: red;
+      font-size: 14px;
     }
   </style>
 </head>
@@ -69,43 +73,45 @@
 </div>
 
 <script>
-
 async function login() {
+  const username = document.getElementById("username").value.trim();
+  const password = document.getElementById("password").value.trim();
+  const msg = document.getElementById("msg");
 
-  const username = document.getElementById("username").value;
-  const password = document.getElementById("password").value;
+  msg.innerText = "";
 
-  const res = await fetch("/login", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify({
-      username: username,
-      password: password
-    })
-  });
+  try {
+    const res = await fetch("/login", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        username: username,
+        password: password
+      })
+    });
 
-  const data = await res.json();
+    const data = await res.json();
 
-  if (data.success) {
+    if (data.success) {
+      localStorage.setItem("user", JSON.stringify(data.user));
 
-    if (data.user.role === "admin") {
-      window.location.href = "/index.html";
+      if (data.user.role === "admin") {
+        window.location.href = "/index.html";
+      } else if (data.user.role === "agent") {
+        window.location.href = "/agent.html";
+      } else {
+        msg.innerText = "Invalid role";
+      }
+    } else {
+      msg.innerText = data.message || "Invalid login";
     }
-
-    else if (data.user.role === "agent") {
-      window.location.href = "/agent.html";
-    }
-
-  } else {
-
-    document.getElementById("msg").innerText = "Invalid login";
-
+  } catch (error) {
+    console.log("Login Error:", error);
+    msg.innerText = "Server error";
   }
-
 }
-
 </script>
 
 </body>

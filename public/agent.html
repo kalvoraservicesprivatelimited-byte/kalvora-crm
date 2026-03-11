@@ -111,6 +111,20 @@
     .active{
       display:block;
     }
+    .top-right{
+      display:flex;
+      align-items:center;
+      gap:12px;
+    }
+    .logout-btn{
+      width:auto;
+      background:#dc2626;
+      padding:8px 14px;
+      margin-top:0;
+    }
+    .logout-btn:hover{
+      background:#b91c1c;
+    }
     @media(max-width:1000px){
       .cards{
         grid-template-columns:1fr 1fr;
@@ -141,7 +155,10 @@
   <div class="main">
     <div class="topbar">
       <div>Agent Panel</div>
-      <div id="agentName"></div>
+      <div class="top-right">
+        <div id="agentName"></div>
+        <button class="logout-btn" onclick="logout()">Logout</button>
+      </div>
     </div>
 
     <div class="content">
@@ -329,30 +346,53 @@
     document.getElementById(id).classList.add("active");
   }
 
+  function logout(){
+    localStorage.removeItem("user");
+    window.location.href = "/login.html";
+  }
+
   async function initAgentPage(){
     const user = JSON.parse(localStorage.getItem("user"));
 
-    if(!user){
+    if(!user || user.role !== "agent"){
       window.location.href = "/login.html";
       return;
     }
 
-    const res = await fetch("/agent-by-email/" + encodeURIComponent(user.email));
-    const data = await res.json();
-
-    if(!data.success){
-      alert("Agent details not found");
-      return;
-    }
-
-    currentAgent = data.agent;
     document.getElementById("agentName").innerText =
-      currentAgent.name + " (" + (currentAgent.employee_id || "") + ")";
+      (user.username || "Agent");
 
-    await loadSales();
-    await loadLeaves();
-    await loadAttendance();
-    await loadTargetAchievement();
+    try {
+      const res = await fetch("/agents");
+      const data = await res.json();
+
+      if (data.success && data.agents) {
+        currentAgent = data.agents.find(a => a.employee_id === user.username);
+
+        if (!currentAgent) {
+          alert("Agent details not found");
+          window.location.href = "/login.html";
+          return;
+        }
+      } else {
+        alert("Unable to load agent details");
+        window.location.href = "/login.html";
+        return;
+      }
+
+      document.getElementById("agentName").innerText =
+        currentAgent.name + " (" + (currentAgent.employee_id || "") + ")";
+
+      await loadSales();
+      await loadLeaves();
+      await loadAttendance();
+      await loadTargetAchievement();
+
+    } catch (error) {
+      console.log("Agent Init Error:", error);
+      alert("Agent panel failed to load");
+      window.location.href = "/login.html";
+    }
   }
 
   function createGraph(approved, pending, rejected){
@@ -377,201 +417,253 @@
   }
 
   async function loadTargetAchievement(){
-    const res = await fetch("/my-target/" + currentAgent.id);
-    const data = await res.json();
+    if (!currentAgent) return;
 
-    const table = document.getElementById("targetTable");
-    table.innerHTML = "";
+    try {
+      const res = await fetch("/my-target/" + currentAgent.id);
+      const data = await res.json();
 
-    if (!data.success || !data.target) {
-      document.getElementById("targetTypeCard").innerText = "-";
-      document.getElementById("assignedTargetCard").innerText = "0";
-      document.getElementById("achievedTargetCard").innerText = "0";
-      document.getElementById("leftTargetCard").innerText = "0";
-      table.innerHTML = `<tr><td colspan="6">No target assigned</td></tr>`;
-      return;
-    }
+      const table = document.getElementById("targetTable");
+      table.innerHTML = "";
 
-    const target = data.target;
-
-    let achieved = Number(target.achieved_value || 0);
-
-    if (target.shift === "day") {
-      const salesRes = await fetch("/my-sales/" + currentAgent.id);
-      const salesData = await salesRes.json();
-      if (salesData.sales) {
-        achieved = salesData.sales.filter(s => s.status === "approved").length;
+      if (!data.success || !data.target) {
+        document.getElementById("targetTypeCard").innerText = "-";
+        document.getElementById("assignedTargetCard").innerText = "0";
+        document.getElementById("achievedTargetCard").innerText = "0";
+        document.getElementById("leftTargetCard").innerText = "0";
+        table.innerHTML = `<tr><td colspan="6">No target assigned</td></tr>`;
+        return;
       }
+
+      const target = data.target;
+
+      let achieved = Number(target.achieved_value || 0);
+
+      if (target.shift === "day") {
+        const salesRes = await fetch("/my-sales/" + currentAgent.id);
+        const salesData = await salesRes.json();
+        if (salesData.sales) {
+          achieved = salesData.sales.filter(s => s.status === "approved").length;
+        }
+      }
+
+      const left = Math.max(0, Number(target.target_value) - achieved);
+
+      document.getElementById("targetTypeCard").innerText = target.target_type || "-";
+      document.getElementById("assignedTargetCard").innerText = target.target_value || 0;
+      document.getElementById("achievedTargetCard").innerText = achieved;
+      document.getElementById("leftTargetCard").innerText = left;
+
+      table.innerHTML = `
+        <tr>
+          <td>${target.month_name || ""}</td>
+          <td>${target.shift || ""}</td>
+          <td>${target.target_type || ""}</td>
+          <td>${target.target_value || 0}</td>
+          <td>${achieved}</td>
+          <td>${left}</td>
+        </tr>
+      `;
+    } catch (error) {
+      console.log("Target Error:", error);
     }
-
-    const left = Math.max(0, Number(target.target_value) - achieved);
-
-    document.getElementById("targetTypeCard").innerText = target.target_type || "-";
-    document.getElementById("assignedTargetCard").innerText = target.target_value || 0;
-    document.getElementById("achievedTargetCard").innerText = achieved;
-    document.getElementById("leftTargetCard").innerText = left;
-
-    table.innerHTML = `
-      <tr>
-        <td>${target.month_name || ""}</td>
-        <td>${target.shift || ""}</td>
-        <td>${target.target_type || ""}</td>
-        <td>${target.target_value || 0}</td>
-        <td>${achieved}</td>
-        <td>${left}</td>
-      </tr>
-    `;
   }
 
   async function postSale(){
-    const res = await fetch("/sales", {
-      method:"POST",
-      headers:{"Content-Type":"application/json"},
-      body:JSON.stringify({
-        agent_id: currentAgent.id,
-        name: saleName.value,
-        phone: salePhone.value,
-        city: saleCity.value,
-        bank: saleBank.value
-      })
-    });
+    if (!currentAgent) return;
 
-    const data = await res.json();
-    document.getElementById("saleMsg").innerText = data.success ? "Lead submitted" : "Lead submit failed";
+    try {
+      const res = await fetch("/sales", {
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({
+          agent_id: currentAgent.id,
+          name: saleName.value,
+          phone: salePhone.value,
+          city: saleCity.value,
+          bank: saleBank.value
+        })
+      });
 
-    if (data.success) {
-      document.getElementById("saleName").value = "";
-      document.getElementById("salePhone").value = "";
-      document.getElementById("saleCity").value = "";
-      document.getElementById("saleBank").value = "";
+      const data = await res.json();
+      document.getElementById("saleMsg").innerText = data.success ? "Lead submitted" : "Lead submit failed";
+
+      if (data.success) {
+        document.getElementById("saleName").value = "";
+        document.getElementById("salePhone").value = "";
+        document.getElementById("saleCity").value = "";
+        document.getElementById("saleBank").value = "";
+      }
+
+      await loadSales();
+      await loadTargetAchievement();
+    } catch (error) {
+      console.log("Post Sale Error:", error);
+      document.getElementById("saleMsg").innerText = "Lead submit failed";
     }
-
-    await loadSales();
-    await loadTargetAchievement();
   }
 
   async function loadSales(){
-    const res = await fetch("/my-sales/" + currentAgent.id);
-    const data = await res.json();
+    if (!currentAgent) return;
 
-    const table = document.getElementById("salesTable");
-    table.innerHTML = "";
+    try {
+      const res = await fetch("/my-sales/" + currentAgent.id);
+      const data = await res.json();
 
-    if (!data.sales) return;
+      const table = document.getElementById("salesTable");
+      table.innerHTML = "";
 
-    let approved = 0;
-    let pending = 0;
-    let rejected = 0;
+      if (!data.sales) return;
 
-    data.sales.forEach(s => {
-      if (s.status === "approved") approved++;
-      else if (s.status === "rejected") rejected++;
-      else pending++;
+      let approved = 0;
+      let pending = 0;
+      let rejected = 0;
 
-      table.innerHTML += `
-        <tr>
-          <td>${s.id}</td>
-          <td>${s.name}</td>
-          <td>${s.phone}</td>
-          <td>${s.city}</td>
-          <td>${s.bank}</td>
-          <td>${s.status}</td>
-          <td>${formatIST(s.created_at)}</td>
-        </tr>
-      `;
-    });
+      data.sales.forEach(s => {
+        if (s.status === "approved") approved++;
+        else if (s.status === "rejected") rejected++;
+        else pending++;
 
-    document.getElementById("totalSales").innerText = data.sales.length;
-    document.getElementById("approvedCount").innerText = approved;
-    document.getElementById("pendingCount").innerText = pending;
-    document.getElementById("rejectedCount").innerText = rejected;
+        table.innerHTML += `
+          <tr>
+            <td>${s.id}</td>
+            <td>${s.name || ""}</td>
+            <td>${s.phone || ""}</td>
+            <td>${s.city || ""}</td>
+            <td>${s.bank || ""}</td>
+            <td>${s.status || ""}</td>
+            <td>${s.created_at ? formatIST(s.created_at) : ""}</td>
+          </tr>
+        `;
+      });
 
-    createGraph(approved, pending, rejected);
+      document.getElementById("totalSales").innerText = data.sales.length;
+      document.getElementById("approvedCount").innerText = approved;
+      document.getElementById("pendingCount").innerText = pending;
+      document.getElementById("rejectedCount").innerText = rejected;
+
+      createGraph(approved, pending, rejected);
+    } catch (error) {
+      console.log("Load Sales Error:", error);
+    }
   }
 
   async function checkIn(){
-    const res = await fetch("/attendance/check-in", {
-      method:"POST",
-      headers:{"Content-Type":"application/json"},
-      body:JSON.stringify({agent_id: currentAgent.id})
-    });
+    if (!currentAgent) return;
 
-    const data = await res.json();
-    document.getElementById("attendanceMsg").innerText = data.message || "Checked In";
-    loadAttendance();
+    try {
+      const res = await fetch("/attendance/check-in", {
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({agent_id: currentAgent.id})
+      });
+
+      const data = await res.json();
+      document.getElementById("attendanceMsg").innerText = data.message || "Checked In";
+      loadAttendance();
+    } catch (error) {
+      console.log("Check In Error:", error);
+      document.getElementById("attendanceMsg").innerText = "Check In failed";
+    }
   }
 
   async function checkOut(){
-    const res = await fetch("/attendance/check-out", {
-      method:"POST",
-      headers:{"Content-Type":"application/json"},
-      body:JSON.stringify({agent_id: currentAgent.id})
-    });
+    if (!currentAgent) return;
 
-    const data = await res.json();
-    document.getElementById("attendanceMsg").innerText = data.message || "Checked Out";
-    loadAttendance();
+    try {
+      const res = await fetch("/attendance/check-out", {
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({agent_id: currentAgent.id})
+      });
+
+      const data = await res.json();
+      document.getElementById("attendanceMsg").innerText = data.message || "Checked Out";
+      loadAttendance();
+    } catch (error) {
+      console.log("Check Out Error:", error);
+      document.getElementById("attendanceMsg").innerText = "Check Out failed";
+    }
   }
 
   async function loadAttendance(){
-    const res = await fetch("/my-attendance/" + currentAgent.id);
-    const data = await res.json();
+    if (!currentAgent) return;
 
-    const table = document.getElementById("attendanceTable");
-    table.innerHTML = "";
+    try {
+      const res = await fetch("/my-attendance/" + currentAgent.id);
+      const data = await res.json();
 
-    if (!data.attendance) return;
+      const table = document.getElementById("attendanceTable");
+      table.innerHTML = "";
 
-    data.attendance.forEach(a => {
-      table.innerHTML += `
-        <tr>
-          <td>${a.id}</td>
-          <td>${a.attendance_date || ""}</td>
-          <td>${a.check_in ? formatIST(a.check_in) : ""}</td>
-          <td>${a.check_out ? formatIST(a.check_out) : ""}</td>
-          <td>${a.status || ""}</td>
-        </tr>
-      `;
-    });
+      if (!data.attendance) return;
+
+      data.attendance.forEach(a => {
+        table.innerHTML += `
+          <tr>
+            <td>${a.id}</td>
+            <td>${a.attendance_date || ""}</td>
+            <td>${a.check_in ? formatIST(a.check_in) : ""}</td>
+            <td>${a.check_out ? formatIST(a.check_out) : ""}</td>
+            <td>${a.status || ""}</td>
+          </tr>
+        `;
+      });
+    } catch (error) {
+      console.log("Load Attendance Error:", error);
+    }
   }
 
   async function applyLeave(){
-    await fetch("/leave/apply", {
-      method:"POST",
-      headers:{"Content-Type":"application/json"},
-      body:JSON.stringify({
-        agent_id: currentAgent.id,
-        leave_type: leaveType.value,
-        start_date: startDate.value,
-        end_date: endDate.value,
-        reason: reason.value
-      })
-    });
+    if (!currentAgent) return;
 
-    alert("Leave applied");
-    loadLeaves();
+    try {
+      await fetch("/leave/apply", {
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({
+          agent_id: currentAgent.id,
+          leave_type: leaveType.value,
+          start_date: startDate.value,
+          end_date: endDate.value,
+          reason: reason.value
+        })
+      });
+
+      alert("Leave applied");
+      loadLeaves();
+    } catch (error) {
+      console.log("Apply Leave Error:", error);
+      alert("Leave apply failed");
+    }
   }
 
   async function loadLeaves(){
-    const res = await fetch("/my-leave/" + currentAgent.id);
-    const data = await res.json();
+    if (!currentAgent) return;
 
-    const table = document.getElementById("leaveTable");
-    table.innerHTML = "";
+    try {
+      const res = await fetch("/my-leave/" + currentAgent.id);
+      const data = await res.json();
 
-    if (!data.leaves) return;
+      const table = document.getElementById("leaveTable");
+      table.innerHTML = "";
 
-    data.leaves.forEach(l => {
-      table.innerHTML += `
-        <tr>
-          <td>${l.id}</td>
-          <td>${l.leave_type}</td>
-          <td>${l.start_date}</td>
-          <td>${l.end_date}</td>
-          <td>${l.status}</td>
-        </tr>
-      `;
-    });
+      if (!data.leaves) return;
+
+      data.leaves.forEach(l => {
+        table.innerHTML += `
+          <tr>
+            <td>${l.id}</td>
+            <td>${l.leave_type || ""}</td>
+            <td>${l.start_date || ""}</td>
+            <td>${l.end_date || ""}</td>
+            <td>${l.status || ""}</td>
+          </tr>
+        `;
+      });
+    } catch (error) {
+      console.log("Load Leave Error:", error);
+    }
   }
 
   initAgentPage();
