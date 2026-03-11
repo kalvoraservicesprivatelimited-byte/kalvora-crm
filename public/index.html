@@ -61,7 +61,7 @@
       grid-template-columns:1fr 1fr;
       gap:20px;
     }
-    input,select{
+    input,select,textarea{
       width:100%;
       padding:10px;
       margin-top:10px;
@@ -115,7 +115,7 @@
     .action-select{
       min-width:130px;
     }
-    @media(max-width:1000px){
+    @media(max-width:1100px){
       .grid2{
         grid-template-columns:1fr;
       }
@@ -133,7 +133,8 @@
     <ul>
       <li onclick="showSection('agentsSection')">Agents</li>
       <li onclick="showSection('targetsSection')">Targets</li>
-      <li onclick="showSection('salesSection')">Sales</li>
+      <li onclick="showSection('salesSection')">Credit Card Leads</li>
+      <li onclick="showSection('autopartsSection')">Autoparts Orders</li>
       <li onclick="showSection('attendanceSection')">Attendance</li>
       <li onclick="showSection('leavesSection')">Leaves</li>
     </ul>
@@ -165,7 +166,10 @@
           </div>
 
           <div class="card">
-            <h3>All Agents</h3>
+            <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;">
+              <h3 style="margin:0;">All Agents</h3>
+              <button class="refresh-btn" onclick="loadAgents()">Refresh Agents</button>
+            </div>
             <table>
               <thead>
                 <tr>
@@ -195,6 +199,8 @@
             <select id="target_type">
               <option value="cards">cards</option>
               <option value="sales">sales</option>
+              <option value="orders">orders</option>
+              <option value="commission">commission</option>
             </select>
             <input id="target_value" placeholder="Target Value">
             <input id="month_name" placeholder="Month Name e.g. March 2026">
@@ -229,7 +235,7 @@
       <div id="salesSection" class="section">
         <div class="card">
           <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;">
-            <h3 style="margin:0;">All Leads</h3>
+            <h3 style="margin:0;">All Credit Card Leads</h3>
             <button class="refresh-btn" onclick="loadSalesAdmin()">Refresh Leads</button>
           </div>
 
@@ -248,6 +254,34 @@
               </tr>
             </thead>
             <tbody id="salesTableAdmin"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div id="autopartsSection" class="section">
+        <div class="card">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;">
+            <h3 style="margin:0;">All Autoparts Orders</h3>
+            <button class="refresh-btn" onclick="loadAutopartsOrders()">Refresh Orders</button>
+          </div>
+
+          <table>
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Emp ID</th>
+                <th>Agent</th>
+                <th>Customer</th>
+                <th>Contact</th>
+                <th>City</th>
+                <th>Part</th>
+                <th>Total</th>
+                <th>Payment</th>
+                <th>Status</th>
+                <th>Update Status</th>
+              </tr>
+            </thead>
+            <tbody id="autopartsOrdersTable"></tbody>
           </table>
         </div>
       </div>
@@ -369,7 +403,7 @@
       table.innerHTML = "";
       select.innerHTML = "";
 
-      if (!data.success || !data.agents) {
+      if (!data.success || !data.agents || data.agents.length === 0) {
         table.innerHTML = `<tr><td colspan="6">No agents found</td></tr>`;
         return;
       }
@@ -518,6 +552,72 @@
     }
   }
 
+  async function loadAutopartsOrders(){
+    try {
+      const res = await fetch("/autoparts-orders");
+      const data = await res.json();
+
+      const table = document.getElementById("autopartsOrdersTable");
+      table.innerHTML = "";
+
+      if (!data.success || !data.orders || data.orders.length === 0) {
+        table.innerHTML = `<tr><td colspan="11">No autoparts orders found</td></tr>`;
+        return;
+      }
+
+      data.orders.forEach(o => {
+        table.innerHTML += `
+          <tr>
+            <td>${o.id || ""}</td>
+            <td>${o.employee_id || ""}</td>
+            <td>${o.agent_name || ""}</td>
+            <td>${o.customer_name || ""}</td>
+            <td>${o.customer_contact_number || ""}</td>
+            <td>${o.city || ""}</td>
+            <td>${o.part_name || ""}</td>
+            <td>${o.total_amount || ""}</td>
+            <td>${o.payment_mode || ""}</td>
+            <td>${o.status || ""}</td>
+            <td>
+              <select class="action-select" onchange="updateAutopartsOrderStatus(${o.id}, this.value)">
+                <option value="">Select</option>
+                <option value="pending" ${o.status === "pending" ? "selected" : ""}>Pending</option>
+                <option value="approved" ${o.status === "approved" ? "selected" : ""}>Approved</option>
+                <option value="rejected" ${o.status === "rejected" ? "selected" : ""}>Rejected</option>
+              </select>
+            </td>
+          </tr>
+        `;
+      });
+    } catch (error) {
+      console.log("LOAD AUTOPARTS ORDERS ERROR:", error);
+      document.getElementById("autopartsOrdersTable").innerHTML = `<tr><td colspan="11">Failed to load autoparts orders</td></tr>`;
+    }
+  }
+
+  async function updateAutopartsOrderStatus(id, status){
+    if (!status) return;
+
+    try {
+      const res = await fetch("/autoparts-order-status/" + id, {
+        method:"PUT",
+        headers:{"Content-Type":"application/json"},
+        body: JSON.stringify({ status })
+      });
+
+      const data = await res.json();
+
+      if (!data.success) {
+        alert(data.message || "Status update failed");
+      }
+
+      await loadAutopartsOrders();
+    } catch (error) {
+      console.log("UPDATE AUTOPARTS STATUS ERROR:", error);
+      alert("Status update failed");
+    }
+  }
+
   async function loadAttendance(){
     try {
       const res = await fetch("/attendance");
@@ -595,11 +695,17 @@
     if (!status) return;
 
     try {
-      await fetch("/leave-status/" + id, {
+      const res = await fetch("/leave-status/" + id, {
         method:"PUT",
         headers:{"Content-Type":"application/json"},
         body: JSON.stringify({ status })
       });
+
+      const data = await res.json();
+
+      if (!data.success) {
+        alert(data.message || "Leave status update failed");
+      }
 
       await loadLeaves();
     } catch (error) {
@@ -611,6 +717,7 @@
     await loadAgents();
     await loadTargets();
     await loadSalesAdmin();
+    await loadAutopartsOrders();
     await loadAttendance();
     await loadLeaves();
   }
