@@ -118,7 +118,7 @@
       margin-top:0;
     }
     .action-select{
-      min-width:130px;
+      min-width:150px;
     }
     .modal-overlay{
       position:fixed;
@@ -132,8 +132,8 @@
     }
     .modal{
       background:#fff;
-      width:min(950px, 100%);
-      max-height:90vh;
+      width:min(1100px, 100%);
+      max-height:92vh;
       overflow:auto;
       border-radius:12px;
       padding:20px;
@@ -156,6 +156,7 @@
       display:grid;
       grid-template-columns:1fr 1fr;
       gap:12px 20px;
+      margin-bottom:20px;
     }
     .detail-box{
       background:#f8fafc;
@@ -173,13 +174,6 @@
       color:#111827;
       word-break:break-word;
     }
-    a{
-      color:#2563eb;
-      text-decoration:none;
-    }
-    a:hover{
-      text-decoration:underline;
-    }
     .date-filter-box{
       display:flex;
       gap:10px;
@@ -194,6 +188,20 @@
     .date-filter-box button{
       width:auto;
       margin-top:0;
+    }
+    .admin-update-box{
+      background:#f8fafc;
+      border:1px solid #e5e7eb;
+      border-radius:8px;
+      padding:15px;
+      margin-top:10px;
+    }
+    a{
+      color:#2563eb;
+      text-decoration:none;
+    }
+    a:hover{
+      text-decoration:underline;
     }
     @media(max-width:1100px){
       .grid2{
@@ -329,9 +337,9 @@
                 <th>Emp ID</th>
                 <th>Agent</th>
                 <th>Customer</th>
-                <th>Phone</th>
+                <th>Mobile</th>
                 <th>City</th>
-                <th>Bank</th>
+                <th>Product</th>
                 <th>Status</th>
                 <th>View</th>
                 <th>Update Status</th>
@@ -433,7 +441,16 @@
       <h3 id="detailsModalTitle" style="margin:0;">Lead Details</h3>
       <button class="close-btn" onclick="closeDetailsModal()">Close</button>
     </div>
+
     <div id="detailsModalBody" class="details-grid"></div>
+
+    <div id="adminCreditUpdateBox" class="admin-update-box" style="display:none;">
+      <h3 style="margin-top:0;">Admin Update</h3>
+      <input id="adminCallRecording" placeholder="Call Recording Link">
+      <textarea id="adminQualityFeedback" placeholder="Quality Feedback"></textarea>
+      <button onclick="saveCreditLeadAdminFields()">Save Admin Fields</button>
+      <div id="adminCreditUpdateMsg"></div>
+    </div>
   </div>
 </div>
 
@@ -445,6 +462,7 @@
 
   let salesCache = [];
   let autopartsCache = [];
+  let currentCreditLeadId = null;
 
   function showSection(id){
     document.querySelectorAll(".section").forEach(sec => sec.classList.remove("active"));
@@ -488,21 +506,65 @@
 
   function closeDetailsModal() {
     document.getElementById("detailsModalOverlay").style.display = "none";
+    document.getElementById("adminCreditUpdateBox").style.display = "none";
+    document.getElementById("adminCallRecording").value = "";
+    document.getElementById("adminQualityFeedback").value = "";
+    document.getElementById("adminCreditUpdateMsg").innerText = "";
+    currentCreditLeadId = null;
   }
 
   function viewCreditLead(index) {
     const s = salesCache[index];
     if (!s) return;
 
+    currentCreditLeadId = s.id;
+    document.getElementById("adminCreditUpdateBox").style.display = "block";
+    document.getElementById("adminCallRecording").value = s.call_recording || "";
+    document.getElementById("adminQualityFeedback").value = s.quality_feedback || "";
+    document.getElementById("adminCreditUpdateMsg").innerText = "";
+
     openDetailsModal("Credit Card Lead Details", [
       { label: "Lead ID", value: s.id },
       { label: "Employee ID", value: s.employee_id || "" },
       { label: "Agent Name", value: s.agent_name || "" },
       { label: "Agent Shift", value: s.shift || "" },
-      { label: "Customer Name", value: s.customer_name || "" },
-      { label: "Phone", value: s.phone || "" },
+      { label: "ARN", value: s.arn || "" },
+      { label: "Product Applied", value: s.product_applied || "" },
+      { label: "Full Name (as per PAN)", value: s.full_name_pan || "" },
+      { label: "Mobile Number", value: s.mobile_number || "" },
+      { label: "Alternate Number", value: s.alternate_number || "" },
+      { label: "Email ID", value: s.email_id || "" },
+      { label: "Date of Birth", value: s.date_of_birth || "" },
+      { label: "Gender", value: s.gender || "" },
+      { label: "Current Address", value: s.current_address || "" },
       { label: "City", value: s.city || "" },
-      { label: "Bank", value: s.bank || "" },
+      { label: "State", value: s.state || "" },
+      { label: "Pincode", value: s.pincode || "" },
+      { label: "Residence Type", value: s.residence_type || "" },
+      { label: "Company Name", value: s.company_name || "" },
+      { label: "Job Designation", value: s.job_designation || "" },
+      { label: "Monthly In-Hand Salary", value: s.monthly_in_hand_salary || "" },
+      { label: "Salary Account Bank", value: s.salary_account_bank || "" },
+      { label: "Total Work Experience", value: s.total_work_experience || "" },
+      { label: "Current Company", value: s.current_company || "" },
+      { label: "Working Since", value: s.working_since || "" },
+      { label: "Do you already have a Credit Card?", value: s.already_have_credit_card || "" },
+      { label: "Existing Card Bank Name", value: s.existing_card_bank_name || "" },
+      { label: "Credit Limit (Approx)", value: s.credit_limit_approx || "" },
+      { label: "Card Vintage", value: s.card_vintage || "" },
+      { label: "First Credit Card Application", value: s.first_credit_card_application || "" },
+      { label: "Any Active Loan?", value: s.any_active_loan || "" },
+      { label: "EMI Amount (Approx)", value: s.emi_amount_approx || "" },
+      { label: "Salary Credit Regular?", value: s.salary_credit_regular || "" },
+      { label: "PAN Available", value: s.pan_available || "" },
+      { label: "Aadhaar Available", value: s.aadhaar_available || "" },
+      { label: "Office ID Available", value: s.office_id_available || "" },
+      { label: "Customer Consent Taken", value: s.customer_consent_taken || "" },
+      { label: "Application Date", value: s.application_date || "" },
+      { label: "Customer applied voluntarily and details shared are correct", value: s.customer_declaration || "" },
+      { label: "20% Amount Balance is there ?", value: s.amount_balance_20 || "" },
+      { label: "Call Recording", value: s.call_recording ? makeLink(s.call_recording) : "" },
+      { label: "Quality Feedback", value: s.quality_feedback || "" },
       { label: "Status", value: s.status || "" },
       { label: "Submitted At", value: formatDateTime(s.created_at) }
     ]);
@@ -511,6 +573,8 @@
   function viewAutopartsOrder(index) {
     const o = autopartsCache[index];
     if (!o) return;
+
+    document.getElementById("adminCreditUpdateBox").style.display = "none";
 
     openDetailsModal("Autoparts Order Details", [
       { label: "Order ID", value: o.id },
@@ -544,6 +608,29 @@
       { label: "Status", value: o.status || "" },
       { label: "Submitted At", value: formatDateTime(o.created_at) }
     ]);
+  }
+
+  async function saveCreditLeadAdminFields(){
+    if (!currentCreditLeadId) return;
+
+    try {
+      const res = await fetch("/sales-admin-update/" + currentCreditLeadId, {
+        method:"PUT",
+        headers:{"Content-Type":"application/json"},
+        body: JSON.stringify({
+          call_recording: document.getElementById("adminCallRecording").value.trim(),
+          quality_feedback: document.getElementById("adminQualityFeedback").value.trim()
+        })
+      });
+
+      const data = await res.json();
+      document.getElementById("adminCreditUpdateMsg").innerText = data.success ? "Saved successfully" : (data.message || "Save failed");
+
+      await loadSalesAdmin();
+    } catch (error) {
+      console.log("SAVE CREDIT ADMIN FIELDS ERROR:", error);
+      document.getElementById("adminCreditUpdateMsg").innerText = "Save failed";
+    }
   }
 
   async function createAgent(){
@@ -695,16 +782,17 @@
             <td>${s.id || ""}</td>
             <td>${s.employee_id || ""}</td>
             <td>${s.agent_name || ""}</td>
-            <td>${s.customer_name || ""}</td>
-            <td>${s.phone || ""}</td>
+            <td>${s.full_name_pan || s.customer_name || ""}</td>
+            <td>${s.mobile_number || s.phone || ""}</td>
             <td>${s.city || ""}</td>
-            <td>${s.bank || ""}</td>
+            <td>${s.product_applied || s.bank || ""}</td>
             <td>${s.status || ""}</td>
             <td><button class="small-btn" onclick="viewCreditLead(${index})">View</button></td>
             <td>
               <select class="action-select" onchange="updateSaleStatus(${s.id}, this.value)">
                 <option value="">Select</option>
                 <option value="pending" ${s.status === "pending" ? "selected" : ""}>Pending</option>
+                <option value="in process" ${s.status === "in process" ? "selected" : ""}>In Process</option>
                 <option value="approved" ${s.status === "approved" ? "selected" : ""}>Approved</option>
                 <option value="rejected" ${s.status === "rejected" ? "selected" : ""}>Rejected</option>
               </select>
