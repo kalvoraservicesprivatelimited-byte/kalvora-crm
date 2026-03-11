@@ -8,12 +8,11 @@ const app = express();
 
 app.use(cors());
 app.use(express.json());
+app.use(express.static(path.join(__dirname, "public")));
 
 app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "login.html"));
 });
-
-app.use(express.static(path.join(__dirname, "public")));
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
@@ -32,58 +31,31 @@ app.post("/login", async (req, res) => {
     const { username, password } = req.body;
 
     const result = await pool.query(
-      "SELECT * FROM users WHERE username=$1 AND password=$2",
+      "SELECT * FROM public.users WHERE username=$1 AND password=$2 LIMIT 1",
       [username, password]
     );
 
-    if (result.rows.length > 0) {
-      res.json({
-        success: true,
-        user: result.rows[0]
-      });
-    } else {
-      res.json({
+    if (result.rows.length === 0) {
+      return res.json({
         success: false,
         message: "Invalid login"
       });
     }
-  } catch (err) {
-    console.log("Login Error:", err);
-    res.status(500).json({
+
+    return res.json({
+      success: true,
+      user: result.rows[0]
+    });
+  } catch (error) {
+    console.log("LOGIN ERROR:", error);
+    return res.status(500).json({
       success: false,
       message: "Server error"
     });
   }
 });
 
-/* GET AGENT PROFILE BY EMAIL */
-app.get("/agent-by-email/:email", async (req, res) => {
-  try {
-    const email = decodeURIComponent(req.params.email);
-
-    const result = await pool.query(
-      "SELECT * FROM public.agents WHERE email=$1 LIMIT 1",
-      [email]
-    );
-
-    if (result.rows.length > 0) {
-      res.json({
-        success: true,
-        agent: result.rows[0]
-      });
-    } else {
-      res.json({
-        success: false,
-        message: "Agent not found"
-      });
-    }
-  } catch (error) {
-    console.log(error);
-    res.status(500).json({ error: "Fetch agent failed" });
-  }
-});
-
-/* GET AGENT PROFILE BY USERNAME / EMPLOYEE ID */
+/* GET AGENT BY USERNAME / EMPLOYEE ID */
 app.get("/my-agent/:username", async (req, res) => {
   try {
     const { username } = req.params;
@@ -93,61 +65,22 @@ app.get("/my-agent/:username", async (req, res) => {
       [username]
     );
 
-    if (result.rows.length > 0) {
-      res.json({
-        success: true,
-        agent: result.rows[0]
-      });
-    } else {
-      res.json({
+    if (result.rows.length === 0) {
+      return res.json({
         success: false,
         message: "Agent not found"
       });
     }
-  } catch (error) {
-    console.log(error);
-    res.status(500).json({ error: "Fetch my agent failed" });
-  }
-});
 
-/* CREATE AGENT */
-app.post("/create-agent", async (req, res) => {
-  try {
-    const { employee_id, name, email, phone, shift, password } = req.body;
-
-    const existingAgent = await pool.query(
-      "SELECT * FROM public.agents WHERE employee_id=$1 OR email=$2",
-      [employee_id, email]
-    );
-
-    if (existingAgent.rows.length > 0) {
-      return res.status(400).json({
-        success: false,
-        message: "Agent already exists"
-      });
-    }
-
-    const result = await pool.query(
-      `INSERT INTO public.agents (employee_id, name, email, phone, shift, password)
-       VALUES ($1,$2,$3,$4,$5,$6)
-       RETURNING *`,
-      [employee_id, name, email, phone, shift, password]
-    );
-
-    await pool.query(
-      "INSERT INTO public.users (username, password, role) VALUES ($1,$2,$3)",
-      [employee_id, password, "agent"]
-    );
-
-    res.json({
+    return res.json({
       success: true,
       agent: result.rows[0]
     });
-  } catch (err) {
-    console.error("CREATE AGENT ERROR:", err);
-    res.status(500).json({
+  } catch (error) {
+    console.log("MY AGENT ERROR:", error);
+    return res.status(500).json({
       success: false,
-      message: "Create agent failed"
+      message: "Fetch my agent failed"
     });
   }
 });
@@ -159,33 +92,99 @@ app.get("/agents", async (req, res) => {
       "SELECT * FROM public.agents ORDER BY id ASC"
     );
 
-    res.json({
+    return res.json({
       success: true,
       agents: result.rows
     });
   } catch (error) {
-    console.log(error);
-    res.status(500).json({ error: "Fetch agents failed" });
+    console.log("GET AGENTS ERROR:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Fetch agents failed"
+    });
   }
 });
 
-/* AGENT SUBMIT LEAD - DEFAULT STATUS PENDING */
+/* CREATE AGENT */
+app.post("/create-agent", async (req, res) => {
+  try {
+    const { employee_id, name, email, phone, password, shift } = req.body;
+
+    if (!employee_id || !name || !email || !phone || !password || !shift) {
+      return res.status(400).json({
+        success: false,
+        message: "All fields are required"
+      });
+    }
+
+    const exists = await pool.query(
+      "SELECT * FROM public.agents WHERE employee_id=$1 OR email=$2 LIMIT 1",
+      [employee_id, email]
+    );
+
+    if (exists.rows.length > 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Agent already exists"
+      });
+    }
+
+    const agentResult = await pool.query(
+      `INSERT INTO public.agents (employee_id, name, email, phone, password, shift)
+       VALUES ($1,$2,$3,$4,$5,$6)
+       RETURNING *`,
+      [employee_id, name, email, phone, password, shift]
+    );
+
+    await pool.query(
+      `INSERT INTO public.users (username, password, role)
+       VALUES ($1,$2,'agent')`,
+      [employee_id, password]
+    );
+
+    return res.json({
+      success: true,
+      agent: agentResult.rows[0]
+    });
+  } catch (error) {
+    console.log("CREATE AGENT ERROR:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Create agent failed"
+    });
+  }
+});
+
+/* CREATE / SUBMIT LEAD */
 app.post("/sales", async (req, res) => {
   try {
     const { agent_id, name, phone, city, bank } = req.body;
 
+    if (!agent_id || !name || !phone || !city || !bank) {
+      return res.status(400).json({
+        success: false,
+        message: "All fields are required"
+      });
+    }
+
     const result = await pool.query(
-      "INSERT INTO public.credit_card_leads (agent_id, name, phone, city, bank, status) VALUES ($1,$2,$3,$4,$5,$6) RETURNING *",
-      [agent_id, name, phone, city, bank, "pending"]
+      `INSERT INTO public.credit_card_leads
+       (agent_id, name, phone, city, bank, status)
+       VALUES ($1,$2,$3,$4,$5,'pending')
+       RETURNING *`,
+      [agent_id, name, phone, city, bank]
     );
 
-    res.json({
+    return res.json({
       success: true,
       sale: result.rows[0]
     });
   } catch (error) {
-    console.log(error);
-    res.status(500).json({ error: "Create sale failed" });
+    console.log("CREATE SALE ERROR:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Lead submit failed"
+    });
   }
 });
 
@@ -210,13 +209,16 @@ app.get("/sales", async (req, res) => {
       ORDER BY c.id DESC
     `);
 
-    res.json({
+    return res.json({
       success: true,
       sales: result.rows
     });
   } catch (error) {
-    console.log(error);
-    res.status(500).json({ error: "Fetch sales failed" });
+    console.log("GET SALES ERROR:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Fetch sales failed"
+    });
   }
 });
 
@@ -230,24 +232,26 @@ app.get("/my-sales/:agentId", async (req, res) => {
       [agentId]
     );
 
-    res.json({
+    return res.json({
       success: true,
       sales: result.rows
     });
   } catch (error) {
-    console.log(error);
-    res.status(500).json({ error: "Fetch my sales failed" });
+    console.log("MY SALES ERROR:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Fetch my sales failed"
+    });
   }
 });
 
-/* ADMIN UPDATE STATUS */
+/* UPDATE SALE STATUS */
 app.put("/sale-status/:id", async (req, res) => {
   try {
     const { id } = req.params;
     const { status } = req.body;
 
     const allowedStatuses = ["pending", "approved", "rejected"];
-
     if (!allowedStatuses.includes(status)) {
       return res.status(400).json({
         success: false,
@@ -260,21 +264,111 @@ app.put("/sale-status/:id", async (req, res) => {
       [status, id]
     );
 
-    res.json({
+    return res.json({
       success: true,
       sale: result.rows[0]
     });
   } catch (error) {
-    console.log(error);
-    res.status(500).json({ error: "Update status failed" });
+    console.log("SALE STATUS ERROR:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Update status failed"
+    });
   }
 });
 
-/* ALL ATTENDANCE */
+/* CHECK-IN */
+app.post("/attendance/check-in", async (req, res) => {
+  try {
+    const { agent_id } = req.body;
+
+    if (!agent_id) {
+      return res.status(400).json({
+        success: false,
+        message: "agent_id required"
+      });
+    }
+
+    const existing = await pool.query(
+      "SELECT * FROM public.attendance WHERE agent_id=$1 AND attendance_date=CURRENT_DATE LIMIT 1",
+      [agent_id]
+    );
+
+    if (existing.rows.length > 0) {
+      return res.json({
+        success: false,
+        message: "Already checked in today"
+      });
+    }
+
+    const result = await pool.query(
+      `INSERT INTO public.attendance
+       (agent_id, attendance_date, check_in, status)
+       VALUES ($1, CURRENT_DATE, NOW(), 'present')
+       RETURNING *`,
+      [agent_id]
+    );
+
+    return res.json({
+      success: true,
+      message: "Checked In",
+      attendance: result.rows[0]
+    });
+  } catch (error) {
+    console.log("CHECK-IN ERROR:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Check-in failed"
+    });
+  }
+});
+
+/* CHECK-OUT */
+app.post("/attendance/check-out", async (req, res) => {
+  try {
+    const { agent_id } = req.body;
+
+    if (!agent_id) {
+      return res.status(400).json({
+        success: false,
+        message: "agent_id required"
+      });
+    }
+
+    const result = await pool.query(
+      `UPDATE public.attendance
+       SET check_out=NOW()
+       WHERE agent_id=$1 AND attendance_date=CURRENT_DATE
+       RETURNING *`,
+      [agent_id]
+    );
+
+    if (result.rows.length === 0) {
+      return res.json({
+        success: false,
+        message: "No check-in found for today"
+      });
+    }
+
+    return res.json({
+      success: true,
+      message: "Checked Out",
+      attendance: result.rows[0]
+    });
+  } catch (error) {
+    console.log("CHECK-OUT ERROR:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Check-out failed"
+    });
+  }
+});
+
+/* ALL ATTENDANCE FOR ADMIN */
 app.get("/attendance", async (req, res) => {
   try {
     const result = await pool.query(`
-      SELECT 
+      SELECT
         at.id,
         at.agent_id,
         a.name AS agent_name,
@@ -289,72 +383,16 @@ app.get("/attendance", async (req, res) => {
       ORDER BY at.id DESC
     `);
 
-    res.json({
+    return res.json({
       success: true,
       attendance: result.rows
     });
   } catch (error) {
-    console.log(error);
-    res.status(500).json({ error: "Fetch attendance failed" });
-  }
-});
-
-/* CHECK-IN */
-app.post("/attendance/check-in", async (req, res) => {
-  try {
-    const { agent_id } = req.body;
-
-    const existing = await pool.query(
-      "SELECT * FROM public.attendance WHERE agent_id=$1 AND attendance_date=CURRENT_DATE",
-      [agent_id]
-    );
-
-    if (existing.rows.length > 0) {
-      return res.json({
-        success: false,
-        message: "Already checked in today"
-      });
-    }
-
-    const result = await pool.query(
-      "INSERT INTO public.attendance (agent_id, attendance_date, check_in, status) VALUES ($1,CURRENT_DATE,NOW(),'present') RETURNING *",
-      [agent_id]
-    );
-
-    res.json({
-      success: true,
-      attendance: result.rows[0]
+    console.log("GET ATTENDANCE ERROR:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Fetch attendance failed"
     });
-  } catch (error) {
-    console.log(error);
-    res.status(500).json({ error: "Check-in failed" });
-  }
-});
-
-/* CHECK-OUT */
-app.post("/attendance/check-out", async (req, res) => {
-  try {
-    const { agent_id } = req.body;
-
-    const result = await pool.query(
-      "UPDATE public.attendance SET check_out=NOW() WHERE agent_id=$1 AND attendance_date=CURRENT_DATE RETURNING *",
-      [agent_id]
-    );
-
-    if (result.rows.length === 0) {
-      return res.json({
-        success: false,
-        message: "No check-in found for today"
-      });
-    }
-
-    res.json({
-      success: true,
-      attendance: result.rows[0]
-    });
-  } catch (error) {
-    console.log(error);
-    res.status(500).json({ error: "Check-out failed" });
   }
 });
 
@@ -368,13 +406,16 @@ app.get("/my-attendance/:agentId", async (req, res) => {
       [agentId]
     );
 
-    res.json({
+    return res.json({
       success: true,
       attendance: result.rows
     });
   } catch (error) {
-    console.log(error);
-    res.status(500).json({ error: "Fetch my attendance failed" });
+    console.log("MY ATTENDANCE ERROR:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Fetch my attendance failed"
+    });
   }
 });
 
@@ -384,25 +425,31 @@ app.post("/leave/apply", async (req, res) => {
     const { agent_id, leave_type, start_date, end_date, reason } = req.body;
 
     const result = await pool.query(
-      "INSERT INTO public.leave_requests (agent_id, leave_type, start_date, end_date, reason, status) VALUES ($1,$2,$3,$4,$5,'pending') RETURNING *",
+      `INSERT INTO public.leave_requests
+       (agent_id, leave_type, start_date, end_date, reason, status)
+       VALUES ($1,$2,$3,$4,$5,'pending')
+       RETURNING *`,
       [agent_id, leave_type, start_date, end_date, reason]
     );
 
-    res.json({
+    return res.json({
       success: true,
       leave: result.rows[0]
     });
   } catch (error) {
-    console.log(error);
-    res.status(500).json({ error: "Leave apply failed" });
+    console.log("APPLY LEAVE ERROR:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Leave apply failed"
+    });
   }
 });
 
-/* ALL LEAVES */
+/* ALL LEAVES FOR ADMIN */
 app.get("/leave", async (req, res) => {
   try {
     const result = await pool.query(`
-      SELECT 
+      SELECT
         lr.id,
         lr.agent_id,
         a.name AS agent_name,
@@ -418,13 +465,16 @@ app.get("/leave", async (req, res) => {
       ORDER BY lr.id DESC
     `);
 
-    res.json({
+    return res.json({
       success: true,
       leaves: result.rows
     });
   } catch (error) {
-    console.log(error);
-    res.status(500).json({ error: "Fetch leaves failed" });
+    console.log("GET LEAVES ERROR:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Fetch leaves failed"
+    });
   }
 });
 
@@ -438,13 +488,16 @@ app.get("/my-leave/:agentId", async (req, res) => {
       [agentId]
     );
 
-    res.json({
+    return res.json({
       success: true,
       leaves: result.rows
     });
   } catch (error) {
-    console.log(error);
-    res.status(500).json({ error: "Fetch my leaves failed" });
+    console.log("MY LEAVES ERROR:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Fetch my leaves failed"
+    });
   }
 });
 
@@ -459,13 +512,16 @@ app.put("/leave-status/:id", async (req, res) => {
       [status, id]
     );
 
-    res.json({
+    return res.json({
       success: true,
       leave: result.rows[0]
     });
   } catch (error) {
-    console.log(error);
-    res.status(500).json({ error: "Leave status update failed" });
+    console.log("LEAVE STATUS ERROR:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Leave status update failed"
+    });
   }
 });
 
@@ -474,14 +530,24 @@ app.post("/targets", async (req, res) => {
   try {
     const { agent_id, shift, target_type, target_value, month_name } = req.body;
 
+    if (!agent_id || !shift || !target_type || !target_value || !month_name) {
+      return res.status(400).json({
+        success: false,
+        message: "All fields are required"
+      });
+    }
+
     const existing = await pool.query(
-      "SELECT * FROM public.targets WHERE agent_id=$1 AND month_name=$2",
+      "SELECT * FROM public.targets WHERE agent_id=$1 AND month_name=$2 LIMIT 1",
       [agent_id, month_name]
     );
 
     if (existing.rows.length > 0) {
       const updated = await pool.query(
-        "UPDATE public.targets SET shift=$1, target_type=$2, target_value=$3 WHERE agent_id=$4 AND month_name=$5 RETURNING *",
+        `UPDATE public.targets
+         SET shift=$1, target_type=$2, target_value=$3
+         WHERE agent_id=$4 AND month_name=$5
+         RETURNING *`,
         [shift, target_type, target_value, agent_id, month_name]
       );
 
@@ -492,21 +558,27 @@ app.post("/targets", async (req, res) => {
     }
 
     const result = await pool.query(
-      "INSERT INTO public.targets (agent_id, shift, target_type, target_value, month_name) VALUES ($1,$2,$3,$4,$5) RETURNING *",
+      `INSERT INTO public.targets
+       (agent_id, shift, target_type, target_value, month_name, achieved_value)
+       VALUES ($1,$2,$3,$4,$5,0)
+       RETURNING *`,
       [agent_id, shift, target_type, target_value, month_name]
     );
 
-    res.json({
+    return res.json({
       success: true,
       target: result.rows[0]
     });
   } catch (error) {
-    console.log(error);
-    res.status(500).json({ error: "Target save failed" });
+    console.log("TARGET SAVE ERROR:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Target save failed"
+    });
   }
 });
 
-/* GET ALL TARGETS */
+/* ALL TARGETS */
 app.get("/targets", async (req, res) => {
   try {
     const result = await pool.query(`
@@ -519,17 +591,20 @@ app.get("/targets", async (req, res) => {
       ORDER BY t.id DESC
     `);
 
-    res.json({
+    return res.json({
       success: true,
       targets: result.rows
     });
   } catch (error) {
-    console.log(error);
-    res.status(500).json({ error: "Fetch targets failed" });
+    console.log("GET TARGETS ERROR:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Fetch targets failed"
+    });
   }
 });
 
-/* GET MY TARGET */
+/* MY TARGET */
 app.get("/my-target/:agentId", async (req, res) => {
   try {
     const { agentId } = req.params;
@@ -546,13 +621,16 @@ app.get("/my-target/:agentId", async (req, res) => {
       });
     }
 
-    res.json({
+    return res.json({
       success: true,
       target: result.rows[0]
     });
   } catch (error) {
-    console.log(error);
-    res.status(500).json({ error: "Fetch target failed" });
+    console.log("MY TARGET ERROR:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Fetch target failed"
+    });
   }
 });
 
@@ -567,13 +645,16 @@ app.put("/targets/achieved/:agentId", async (req, res) => {
       [achieved_value, agentId]
     );
 
-    res.json({
+    return res.json({
       success: true,
       target: result.rows[0]
     });
   } catch (error) {
-    console.log(error);
-    res.status(500).json({ error: "Update achieved target failed" });
+    console.log("TARGET ACHIEVED ERROR:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Update achieved target failed"
+    });
   }
 });
 

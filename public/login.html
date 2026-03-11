@@ -12,7 +12,6 @@
       height: 100vh;
       margin: 0;
     }
-
     .login-box {
       background: white;
       padding: 30px;
@@ -20,12 +19,10 @@
       width: 320px;
       box-shadow: 0 0 12px rgba(0,0,0,0.12);
     }
-
     h2 {
       text-align: center;
       margin-bottom: 20px;
     }
-
     input {
       width: 100%;
       padding: 10px;
@@ -34,7 +31,6 @@
       border-radius: 4px;
       box-sizing: border-box;
     }
-
     button {
       width: 100%;
       padding: 10px;
@@ -45,74 +41,56 @@
       border-radius: 4px;
       cursor: pointer;
     }
-
-    button:hover {
-      background: #1a252f;
-    }
-
     #msg {
       margin-top: 10px;
       text-align: center;
       color: red;
-      font-size: 14px;
     }
   </style>
 </head>
-
 <body>
+  <div class="login-box">
+    <h2>CRM Login</h2>
+    <input id="username" placeholder="Username">
+    <input id="password" type="password" placeholder="Password">
+    <button onclick="login()">Login</button>
+    <div id="msg"></div>
+  </div>
 
-<div class="login-box">
-  <h2>CRM Login</h2>
+  <script>
+    async function login() {
+      const username = document.getElementById("username").value.trim();
+      const password = document.getElementById("password").value.trim();
+      const msg = document.getElementById("msg");
+      msg.innerText = "";
 
-  <input id="username" placeholder="Username">
-  <input id="password" type="password" placeholder="Password">
+      try {
+        const res = await fetch("/login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ username, password })
+        });
 
-  <button onclick="login()">Login</button>
+        const data = await res.json();
 
-  <div id="msg"></div>
-</div>
+        if (data.success) {
+          localStorage.setItem("user", JSON.stringify(data.user));
 
-<script>
-async function login() {
-  const username = document.getElementById("username").value.trim();
-  const password = document.getElementById("password").value.trim();
-  const msg = document.getElementById("msg");
-
-  msg.innerText = "";
-
-  try {
-    const res = await fetch("/login", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        username: username,
-        password: password
-      })
-    });
-
-    const data = await res.json();
-
-    if (data.success) {
-      localStorage.setItem("user", JSON.stringify(data.user));
-
-      if (data.user.role === "admin") {
-        window.location.href = "/index.html";
-      } else if (data.user.role === "agent") {
-        window.location.href = "/agent.html";
-      } else {
-        msg.innerText = "Invalid role";
+          if (data.user.role === "admin") {
+            window.location.href = "/index.html";
+          } else if (data.user.role === "agent") {
+            window.location.href = "/agent.html";
+          } else {
+            msg.innerText = "Invalid role";
+          }
+        } else {
+          msg.innerText = data.message || "Invalid login";
+        }
+      } catch (error) {
+        console.log(error);
+        msg.innerText = "Server error";
       }
-    } else {
-      msg.innerText = data.message || "Invalid login";
     }
-  } catch (error) {
-    console.log("Login Error:", error);
-    msg.innerText = "Server error";
-  }
-}
-</script>
-
+  </script>
 </body>
 </html>
