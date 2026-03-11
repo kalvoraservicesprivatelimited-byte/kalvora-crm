@@ -104,6 +104,7 @@
     td{
       padding:12px;
       border-bottom:1px solid #eee;
+      vertical-align:top;
     }
     .section{
       display:none;
@@ -146,6 +147,71 @@
       width:auto;
       margin-top:0;
     }
+    .small-btn{
+      width:auto;
+      padding:8px 12px;
+      margin-top:0;
+    }
+    .modal-overlay{
+      position:fixed;
+      inset:0;
+      background:rgba(0,0,0,0.45);
+      display:none;
+      align-items:center;
+      justify-content:center;
+      padding:20px;
+      z-index:9999;
+    }
+    .modal{
+      background:#fff;
+      width:min(980px, 100%);
+      max-height:90vh;
+      overflow:auto;
+      border-radius:12px;
+      padding:20px;
+      box-shadow:0 10px 30px rgba(0,0,0,.2);
+    }
+    .modal-header{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:10px;
+      margin-bottom:15px;
+    }
+    .close-btn{
+      width:auto;
+      background:#111827;
+      padding:8px 14px;
+      margin-top:0;
+    }
+    .details-grid{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:12px 20px;
+    }
+    .detail-box{
+      background:#f8fafc;
+      border:1px solid #e5e7eb;
+      border-radius:8px;
+      padding:10px 12px;
+    }
+    .detail-label{
+      font-size:12px;
+      color:#6b7280;
+      margin-bottom:4px;
+    }
+    .detail-value{
+      font-size:14px;
+      color:#111827;
+      word-break:break-word;
+    }
+    a{
+      color:#2563eb;
+      text-decoration:none;
+    }
+    a:hover{
+      text-decoration:underline;
+    }
     @media(max-width:1000px){
       .cards{
         grid-template-columns:1fr 1fr;
@@ -153,6 +219,9 @@
       table{
         display:block;
         overflow-x:auto;
+      }
+      .details-grid{
+        grid-template-columns:1fr;
       }
     }
   </style>
@@ -167,6 +236,7 @@
       <li onclick="showSection('targetSection')">Target & Achievement</li>
       <li onclick="showSection('sales')">Work Form</li>
       <li onclick="showSection('attendance')">Attendance</li>
+      <li onclick="showSection('leave')">Leave</li>
       <li onclick="showSection('history')">My History</li>
     </ul>
   </div>
@@ -256,10 +326,88 @@
 
         <div id="dayShiftForm" class="card" style="display:none;">
           <h3>Submit Credit Card Lead</h3>
-          <input id="saleName" placeholder="Customer Name">
-          <input id="salePhone" placeholder="Phone">
-          <input id="saleCity" placeholder="City">
-          <input id="saleBank" placeholder="Bank">
+
+          <input id="arn" placeholder="ARN">
+          <input id="product_applied" placeholder="Product Applied">
+          <input id="full_name_pan" placeholder="Full Name (as per PAN)">
+          <input id="mobile_number" placeholder="Mobile Number">
+          <input id="alternate_number" placeholder="Alternate Number (Optional)">
+          <input id="email_id" placeholder="Email ID">
+          <input id="date_of_birth" placeholder="Date of Birth">
+          <select id="gender">
+            <option value="">Gender</option>
+            <option value="male">male</option>
+            <option value="female">female</option>
+            <option value="other">other</option>
+          </select>
+          <textarea id="current_address" placeholder="Current Address"></textarea>
+          <input id="lead_city" placeholder="City">
+          <input id="lead_state" placeholder="State">
+          <input id="lead_pincode" placeholder="Pincode">
+          <input id="residence_type" placeholder="Residence Type">
+          <input id="company_name" placeholder="Company Name">
+          <input id="job_designation" placeholder="Job Designation">
+          <input id="monthly_in_hand_salary" placeholder="Monthly In-Hand Salary">
+          <input id="salary_account_bank" placeholder="Salary Account Bank">
+          <input id="total_work_experience" placeholder="Total Work Experience">
+          <input id="current_company" placeholder="Current Company">
+          <input id="working_since" placeholder="Working Since (Months/Years)">
+          <select id="already_have_credit_card">
+            <option value="">Do you already have a Credit Card?</option>
+            <option value="yes">yes</option>
+            <option value="no">no</option>
+          </select>
+          <input id="existing_card_bank_name" placeholder="Existing Card Bank Name">
+          <input id="credit_limit_approx" placeholder="Credit Limit (Approx)">
+          <input id="card_vintage" placeholder="Card Vintage (How old card is?)">
+          <select id="first_credit_card_application">
+            <option value="">First Credit Card Application</option>
+            <option value="yes">yes</option>
+            <option value="no">no</option>
+          </select>
+          <select id="any_active_loan">
+            <option value="">Any Active Loan?</option>
+            <option value="yes">yes</option>
+            <option value="no">no</option>
+          </select>
+          <input id="emi_amount_approx" placeholder="EMI Amount (Approx)">
+          <select id="salary_credit_regular">
+            <option value="">Salary Credit Regular?</option>
+            <option value="yes">yes</option>
+            <option value="no">no</option>
+          </select>
+          <select id="pan_available">
+            <option value="">PAN Available</option>
+            <option value="yes">yes</option>
+            <option value="no">no</option>
+          </select>
+          <select id="aadhaar_available">
+            <option value="">Aadhaar Available</option>
+            <option value="yes">yes</option>
+            <option value="no">no</option>
+          </select>
+          <select id="office_id_available">
+            <option value="">Office ID Available</option>
+            <option value="yes">yes</option>
+            <option value="no">no</option>
+          </select>
+          <select id="customer_consent_taken">
+            <option value="">Customer Consent Taken</option>
+            <option value="yes">yes</option>
+            <option value="no">no</option>
+          </select>
+          <input id="application_date" placeholder="Application Date">
+          <select id="customer_declaration">
+            <option value="">Customer has applied voluntarily and details shared are correct.</option>
+            <option value="yes">yes</option>
+            <option value="no">no</option>
+          </select>
+          <select id="amount_balance_20">
+            <option value="">20% Amount Balance is there ?</option>
+            <option value="yes">yes</option>
+            <option value="no">no</option>
+          </select>
+
           <button onclick="postSale()">Submit Lead</button>
           <div id="saleMsg"></div>
         </div>
@@ -321,6 +469,23 @@
         </div>
       </div>
 
+      <div id="leave" class="section">
+        <div class="card">
+          <h3>Apply Leave</h3>
+          <select id="leaveType">
+            <option value="paid leave">paid leave</option>
+            <option value="sick leave">sick leave</option>
+            <option value="emergency">emergency</option>
+            <option value="casual leave">casual leave</option>
+          </select>
+          <input type="date" id="startDate">
+          <input type="date" id="endDate">
+          <input id="reason" placeholder="Reason">
+          <button onclick="applyLeave()">Apply Leave</button>
+          <div id="leaveMsg"></div>
+        </div>
+      </div>
+
       <div id="history" class="section">
         <div class="card">
           <h3>My Work History</h3>
@@ -329,14 +494,29 @@
               <tr>
                 <th>ID</th>
                 <th>Customer</th>
-                <th>Phone</th>
-                <th>City / State</th>
-                <th>Product / Bank</th>
                 <th>Status</th>
                 <th>Time</th>
+                <th>View</th>
               </tr>
             </thead>
             <tbody id="salesTable"></tbody>
+          </table>
+        </div>
+
+        <div class="card">
+          <h3>My Leave History</h3>
+          <table>
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Type</th>
+                <th>Start</th>
+                <th>End</th>
+                <th>Reason</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="leaveTable"></tbody>
           </table>
         </div>
 
@@ -368,11 +548,22 @@
   </div>
 </div>
 
+<div id="detailsModalOverlay" class="modal-overlay">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="detailsModalTitle" style="margin:0;">Lead Details</h3>
+      <button class="close-btn" onclick="closeDetailsModal()">Close</button>
+    </div>
+    <div id="detailsModalBody" class="details-grid"></div>
+  </div>
+</div>
+
 <script>
   let currentAgent = null;
   let chartRef = null;
   let loginTimer = null;
   let startTime = null;
+  let workHistoryCache = [];
 
   function formatIST(date){
     return new Date(date).toLocaleString("en-IN",{
@@ -391,6 +582,11 @@
     const m = Math.floor((total % 3600) / 60);
     const s = total % 60;
     return `${h}h ${m}m ${s}s`;
+  }
+
+  function makeLink(value){
+    if (!value) return "";
+    return `<a href="${value}" target="_blank">${value}</a>`;
   }
 
   function showSection(id){
@@ -450,6 +646,98 @@
     document.getElementById("liveTimer").innerText = formatSeconds(totalSeconds);
   }
 
+  function openDetailsModal(title, rows) {
+    document.getElementById("detailsModalTitle").innerText = title;
+    const body = document.getElementById("detailsModalBody");
+    body.innerHTML = rows.map(item => `
+      <div class="detail-box">
+        <div class="detail-label">${item.label}</div>
+        <div class="detail-value">${item.value ?? ""}</div>
+      </div>
+    `).join("");
+    document.getElementById("detailsModalOverlay").style.display = "flex";
+  }
+
+  function closeDetailsModal() {
+    document.getElementById("detailsModalOverlay").style.display = "none";
+  }
+
+  function viewWork(index){
+    const row = workHistoryCache[index];
+    if (!row) return;
+
+    if ((currentAgent.shift || "").toLowerCase() === "night") {
+      openDetailsModal("Autoparts Order Details", [
+        { label: "Order ID", value: row.id },
+        { label: "Customer Name", value: row.customer_name || "" },
+        { label: "Customer Contact Number", value: row.customer_contact_number || "" },
+        { label: "Customer Email ID", value: row.customer_email_id || "" },
+        { label: "Address", value: row.address || "" },
+        { label: "City", value: row.city || "" },
+        { label: "State", value: row.state || "" },
+        { label: "Zipcode", value: row.zipcode || "" },
+        { label: "Billing Address", value: row.billing_address || "" },
+        { label: "Type of Customer", value: row.type_of_customer || "" },
+        { label: "Product Link", value: row.product_link ? makeLink(row.product_link) : "" },
+        { label: "Part Name", value: row.part_name || "" },
+        { label: "Car Make In Year", value: row.car_make_in_year || "" },
+        { label: "Brand Name / Manufacturer", value: row.brand_name || "" },
+        { label: "Actual Part Price", value: row.actual_part_price || "" },
+        { label: "Commission Amount ($)", value: row.commission_amount || "" },
+        { label: "Discount Applied", value: row.discount_applied || "" },
+        { label: "Total Amount", value: row.total_amount || "" },
+        { label: "Order Type", value: row.order_type || "" },
+        { label: "Payment Mode", value: row.payment_mode || "" },
+        { label: "Payment Link", value: row.payment_link ? makeLink(row.payment_link) : "" },
+        { label: "Status", value: row.status || "" },
+        { label: "Submitted At", value: row.created_at ? formatIST(row.created_at) : "" }
+      ]);
+    } else {
+      openDetailsModal("Credit Card Lead Details", [
+        { label: "Lead ID", value: row.id },
+        { label: "ARN", value: row.arn || "" },
+        { label: "Product Applied", value: row.product_applied || "" },
+        { label: "Full Name (as per PAN)", value: row.full_name_pan || "" },
+        { label: "Mobile Number", value: row.mobile_number || "" },
+        { label: "Alternate Number", value: row.alternate_number || "" },
+        { label: "Email ID", value: row.email_id || "" },
+        { label: "Date of Birth", value: row.date_of_birth || "" },
+        { label: "Gender", value: row.gender || "" },
+        { label: "Current Address", value: row.current_address || "" },
+        { label: "City", value: row.city || "" },
+        { label: "State", value: row.state || "" },
+        { label: "Pincode", value: row.pincode || "" },
+        { label: "Residence Type", value: row.residence_type || "" },
+        { label: "Company Name", value: row.company_name || "" },
+        { label: "Job Designation", value: row.job_designation || "" },
+        { label: "Monthly In-Hand Salary", value: row.monthly_in_hand_salary || "" },
+        { label: "Salary Account Bank", value: row.salary_account_bank || "" },
+        { label: "Total Work Experience", value: row.total_work_experience || "" },
+        { label: "Current Company", value: row.current_company || "" },
+        { label: "Working Since", value: row.working_since || "" },
+        { label: "Already Have Credit Card", value: row.already_have_credit_card || "" },
+        { label: "Existing Card Bank Name", value: row.existing_card_bank_name || "" },
+        { label: "Credit Limit (Approx)", value: row.credit_limit_approx || "" },
+        { label: "Card Vintage", value: row.card_vintage || "" },
+        { label: "First Credit Card Application", value: row.first_credit_card_application || "" },
+        { label: "Any Active Loan", value: row.any_active_loan || "" },
+        { label: "EMI Amount (Approx)", value: row.emi_amount_approx || "" },
+        { label: "Salary Credit Regular", value: row.salary_credit_regular || "" },
+        { label: "PAN Available", value: row.pan_available || "" },
+        { label: "Aadhaar Available", value: row.aadhaar_available || "" },
+        { label: "Office ID Available", value: row.office_id_available || "" },
+        { label: "Customer Consent Taken", value: row.customer_consent_taken || "" },
+        { label: "Application Date", value: row.application_date || "" },
+        { label: "Customer Declaration", value: row.customer_declaration || "" },
+        { label: "20% Amount Balance is there ?", value: row.amount_balance_20 || "" },
+        { label: "Call Recording", value: row.call_recording ? makeLink(row.call_recording) : (row.call_recording || "") },
+        { label: "Quality Feedback", value: row.quality_feedback || "" },
+        { label: "Status", value: row.status || "" },
+        { label: "Submitted At", value: row.created_at ? formatIST(row.created_at) : "" }
+      ]);
+    }
+  }
+
   async function initAgentPage(){
     const user = JSON.parse(localStorage.getItem("user"));
 
@@ -483,6 +771,7 @@
     await loadSales();
     await loadAttendance();
     await loadTargetAchievement();
+    await loadLeaves();
     await checkTodayAttendanceStatus();
   }
 
@@ -591,26 +880,68 @@
   }
 
   async function postSale(){
+    const payload = {
+      agent_id: currentAgent.id,
+      arn: document.getElementById("arn").value,
+      product_applied: document.getElementById("product_applied").value,
+      full_name_pan: document.getElementById("full_name_pan").value,
+      mobile_number: document.getElementById("mobile_number").value,
+      alternate_number: document.getElementById("alternate_number").value,
+      email_id: document.getElementById("email_id").value,
+      date_of_birth: document.getElementById("date_of_birth").value,
+      gender: document.getElementById("gender").value,
+      current_address: document.getElementById("current_address").value,
+      city: document.getElementById("lead_city").value,
+      state: document.getElementById("lead_state").value,
+      pincode: document.getElementById("lead_pincode").value,
+      residence_type: document.getElementById("residence_type").value,
+      company_name: document.getElementById("company_name").value,
+      job_designation: document.getElementById("job_designation").value,
+      monthly_in_hand_salary: document.getElementById("monthly_in_hand_salary").value,
+      salary_account_bank: document.getElementById("salary_account_bank").value,
+      total_work_experience: document.getElementById("total_work_experience").value,
+      current_company: document.getElementById("current_company").value,
+      working_since: document.getElementById("working_since").value,
+      already_have_credit_card: document.getElementById("already_have_credit_card").value,
+      existing_card_bank_name: document.getElementById("existing_card_bank_name").value,
+      credit_limit_approx: document.getElementById("credit_limit_approx").value,
+      card_vintage: document.getElementById("card_vintage").value,
+      first_credit_card_application: document.getElementById("first_credit_card_application").value,
+      any_active_loan: document.getElementById("any_active_loan").value,
+      emi_amount_approx: document.getElementById("emi_amount_approx").value,
+      salary_credit_regular: document.getElementById("salary_credit_regular").value,
+      pan_available: document.getElementById("pan_available").value,
+      aadhaar_available: document.getElementById("aadhaar_available").value,
+      office_id_available: document.getElementById("office_id_available").value,
+      customer_consent_taken: document.getElementById("customer_consent_taken").value,
+      application_date: document.getElementById("application_date").value,
+      customer_declaration: document.getElementById("customer_declaration").value,
+      amount_balance_20: document.getElementById("amount_balance_20").value
+    };
+
     const res = await fetch("/sales", {
       method:"POST",
       headers:{"Content-Type":"application/json"},
-      body:JSON.stringify({
-        agent_id: currentAgent.id,
-        name: document.getElementById("saleName").value,
-        phone: document.getElementById("salePhone").value,
-        city: document.getElementById("saleCity").value,
-        bank: document.getElementById("saleBank").value
-      })
+      body:JSON.stringify(payload)
     });
 
     const data = await res.json();
     document.getElementById("saleMsg").innerText = data.success ? "Lead submitted" : (data.message || "Lead submit failed");
 
     if (data.success) {
-      document.getElementById("saleName").value = "";
-      document.getElementById("salePhone").value = "";
-      document.getElementById("saleCity").value = "";
-      document.getElementById("saleBank").value = "";
+      [
+        "arn","product_applied","full_name_pan","mobile_number","alternate_number","email_id",
+        "date_of_birth","gender","current_address","lead_city","lead_state","lead_pincode",
+        "residence_type","company_name","job_designation","monthly_in_hand_salary",
+        "salary_account_bank","total_work_experience","current_company","working_since",
+        "already_have_credit_card","existing_card_bank_name","credit_limit_approx",
+        "card_vintage","first_credit_card_application","any_active_loan","emi_amount_approx",
+        "salary_credit_regular","pan_available","aadhaar_available","office_id_available",
+        "customer_consent_taken","application_date","customer_declaration","amount_balance_20"
+      ].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.value = "";
+      });
     }
 
     await loadSales();
@@ -687,73 +1018,6 @@
     await loadTargetAchievement();
   }
 
-  async function loadSales(){
-    const table = document.getElementById("salesTable");
-    table.innerHTML = "";
-
-    let approved = 0;
-    let pending = 0;
-    let rejected = 0;
-    let total = 0;
-
-    if ((currentAgent.shift || "").toLowerCase() === "night") {
-      const res = await fetch("/my-autoparts-orders/" + currentAgent.id);
-      const data = await res.json();
-
-      if (!data.orders) return;
-
-      data.orders.forEach(o => {
-        total++;
-        if (o.status === "approved") approved++;
-        else if (o.status === "rejected") rejected++;
-        else pending++;
-
-        table.innerHTML += `
-          <tr>
-            <td>${o.id}</td>
-            <td>${o.customer_name || ""}</td>
-            <td>${o.customer_contact_number || ""}</td>
-            <td>${o.city || ""}, ${o.state || ""}</td>
-            <td>${o.part_name || ""}</td>
-            <td>${o.status || ""}</td>
-            <td>${o.created_at ? formatIST(o.created_at) : ""}</td>
-          </tr>
-        `;
-      });
-    } else {
-      const res = await fetch("/my-sales/" + currentAgent.id);
-      const data = await res.json();
-
-      if (!data.sales) return;
-
-      data.sales.forEach(s => {
-        total++;
-        if (s.status === "approved") approved++;
-        else if (s.status === "rejected") rejected++;
-        else pending++;
-
-        table.innerHTML += `
-          <tr>
-            <td>${s.id}</td>
-            <td>${s.name || ""}</td>
-            <td>${s.phone || ""}</td>
-            <td>${s.city || ""}</td>
-            <td>${s.bank || ""}</td>
-            <td>${s.status || ""}</td>
-            <td>${s.created_at ? formatIST(s.created_at) : ""}</td>
-          </tr>
-        `;
-      });
-    }
-
-    document.getElementById("totalSales").innerText = total;
-    document.getElementById("approvedCount").innerText = approved;
-    document.getElementById("pendingCount").innerText = pending;
-    document.getElementById("rejectedCount").innerText = rejected;
-
-    createGraph(approved, pending, rejected);
-  }
-
   async function checkIn(){
     const res = await fetch("/attendance/check-in", {
       method:"POST",
@@ -788,6 +1052,98 @@
     await loadAttendance();
   }
 
+  async function applyLeave(){
+    const res = await fetch("/leave/apply", {
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({
+        agent_id: currentAgent.id,
+        leave_type: document.getElementById("leaveType").value,
+        start_date: document.getElementById("startDate").value,
+        end_date: document.getElementById("endDate").value,
+        reason: document.getElementById("reason").value
+      })
+    });
+
+    const data = await res.json();
+    document.getElementById("leaveMsg").innerText = data.success ? "Leave applied" : (data.message || "Leave apply failed");
+
+    if (data.success) {
+      document.getElementById("startDate").value = "";
+      document.getElementById("endDate").value = "";
+      document.getElementById("reason").value = "";
+      await loadLeaves();
+    }
+  }
+
+  async function loadSales(){
+    const table = document.getElementById("salesTable");
+    table.innerHTML = "";
+    workHistoryCache = [];
+
+    let approved = 0;
+    let pending = 0;
+    let rejected = 0;
+    let total = 0;
+
+    if ((currentAgent.shift || "").toLowerCase() === "night") {
+      const res = await fetch("/my-autoparts-orders/" + currentAgent.id);
+      const data = await res.json();
+
+      if (!data.orders) return;
+
+      workHistoryCache = data.orders;
+
+      data.orders.forEach((o, index) => {
+        total++;
+        if (o.status === "approved") approved++;
+        else if (o.status === "rejected") rejected++;
+        else pending++;
+
+        table.innerHTML += `
+          <tr>
+            <td>${o.id}</td>
+            <td>${o.customer_name || ""}</td>
+            <td>${o.status || ""}</td>
+            <td>${o.created_at ? formatIST(o.created_at) : ""}</td>
+            <td><button class="small-btn" onclick="viewWork(${index})">View</button></td>
+          </tr>
+        `;
+      });
+    } else {
+      const res = await fetch("/my-sales/" + currentAgent.id);
+      const data = await res.json();
+
+      if (!data.sales) return;
+
+      workHistoryCache = data.sales;
+
+      data.sales.forEach((s, index) => {
+        total++;
+        if (s.status === "approved") approved++;
+        else if (s.status === "rejected") rejected++;
+        else pending++;
+
+        table.innerHTML += `
+          <tr>
+            <td>${s.id}</td>
+            <td>${s.full_name_pan || s.name || ""}</td>
+            <td>${s.status || ""}</td>
+            <td>${s.created_at ? formatIST(s.created_at) : ""}</td>
+            <td><button class="small-btn" onclick="viewWork(${index})">View</button></td>
+          </tr>
+        `;
+      });
+    }
+
+    document.getElementById("totalSales").innerText = total;
+    document.getElementById("approvedCount").innerText = approved;
+    document.getElementById("pendingCount").innerText = pending;
+    document.getElementById("rejectedCount").innerText = rejected;
+
+    createGraph(approved, pending, rejected);
+  }
+
   async function loadAttendance(filterDate = ""){
     let url = "/my-attendance/" + currentAgent.id;
     if (filterDate) {
@@ -800,7 +1156,10 @@
     const table = document.getElementById("attendanceTable");
     table.innerHTML = "";
 
-    if (!data.attendance) return;
+    if (!data.attendance || data.attendance.length === 0) {
+      table.innerHTML = `<tr><td colspan="6">No attendance found</td></tr>`;
+      return;
+    }
 
     data.attendance.forEach(a => {
       table.innerHTML += `
@@ -811,6 +1170,32 @@
           <td>${a.check_out ? formatIST(a.check_out) : ""}</td>
           <td>${formatSeconds(a.total_login_seconds || 0)}</td>
           <td>${a.status || ""}</td>
+        </tr>
+      `;
+    });
+  }
+
+  async function loadLeaves(){
+    const res = await fetch("/my-leave/" + currentAgent.id);
+    const data = await res.json();
+
+    const table = document.getElementById("leaveTable");
+    table.innerHTML = "";
+
+    if (!data.leaves || data.leaves.length === 0) {
+      table.innerHTML = `<tr><td colspan="6">No leave history found</td></tr>`;
+      return;
+    }
+
+    data.leaves.forEach(l => {
+      table.innerHTML += `
+        <tr>
+          <td>${l.id}</td>
+          <td>${l.leave_type || ""}</td>
+          <td>${l.start_date || ""}</td>
+          <td>${l.end_date || ""}</td>
+          <td>${l.reason || ""}</td>
+          <td>${l.status || ""}</td>
         </tr>
       `;
     });
