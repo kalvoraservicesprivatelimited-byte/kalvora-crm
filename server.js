@@ -55,6 +55,7 @@ app.post("/login", async (req, res) => {
     });
   }
 });
+
 /* GET AGENT PROFILE BY EMAIL */
 app.get("/agent-by-email/:email", async (req, res) => {
   try {
@@ -82,26 +83,72 @@ app.get("/agent-by-email/:email", async (req, res) => {
   }
 });
 
-/* CREATE AGENT */
-app.post("/agents", async (req, res) => {
+/* GET AGENT PROFILE BY USERNAME / EMPLOYEE ID */
+app.get("/my-agent/:username", async (req, res) => {
   try {
-    const { employee_id, name, email, phone, shift, password } = req.body;
-app.post("/create-agent", async (req, res) => {
-  try {
-    const { employee_id, name, email, phone, password, shift } = req.body;
+    const { username } = req.params;
 
     const result = await pool.query(
-      `INSERT INTO agents (employee_id, name, email, phone, password, shift)
-       VALUES ($1,$2,$3,$4,$5,$6)
-       RETURNING *`,
-      [employee_id, name, email, phone, password, shift]
+      "SELECT * FROM public.agents WHERE employee_id=$1 LIMIT 1",
+      [username]
     );
 
-    res.json({ success: true, agent: result.rows[0] });
+    if (result.rows.length > 0) {
+      res.json({
+        success: true,
+        agent: result.rows[0]
+      });
+    } else {
+      res.json({
+        success: false,
+        message: "Agent not found"
+      });
+    }
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ error: "Fetch my agent failed" });
+  }
+});
 
+/* CREATE AGENT */
+app.post("/create-agent", async (req, res) => {
+  try {
+    const { employee_id, name, email, phone, shift, password } = req.body;
+
+    const existingAgent = await pool.query(
+      "SELECT * FROM public.agents WHERE employee_id=$1 OR email=$2",
+      [employee_id, email]
+    );
+
+    if (existingAgent.rows.length > 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Agent already exists"
+      });
+    }
+
+    const result = await pool.query(
+      `INSERT INTO public.agents (employee_id, name, email, phone, shift, password)
+       VALUES ($1,$2,$3,$4,$5,$6)
+       RETURNING *`,
+      [employee_id, name, email, phone, shift, password]
+    );
+
+    await pool.query(
+      "INSERT INTO public.users (username, password, role) VALUES ($1,$2,$3)",
+      [employee_id, password, "agent"]
+    );
+
+    res.json({
+      success: true,
+      agent: result.rows[0]
+    });
   } catch (err) {
     console.error("CREATE AGENT ERROR:", err);
-    res.status(500).json({ success: false });
+    res.status(500).json({
+      success: false,
+      message: "Create agent failed"
+    });
   }
 });
 
@@ -193,7 +240,7 @@ app.get("/my-sales/:agentId", async (req, res) => {
   }
 });
 
-/* ADMIN UPDATE STATUS - ONLY PENDING/APPROVED/REJECTED */
+/* ADMIN UPDATE STATUS */
 app.put("/sale-status/:id", async (req, res) => {
   try {
     const { id } = req.params;
