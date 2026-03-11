@@ -7,7 +7,7 @@ const path = require("path");
 const app = express();
 
 app.use(cors());
-app.use(express.json());
+app.use(express.json({ limit: "10mb" }));
 app.use(express.static(path.join(__dirname, "public")));
 
 app.get("/", (req, res) => {
@@ -16,9 +16,7 @@ app.get("/", (req, res) => {
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
-  ssl: {
-    rejectUnauthorized: false
-  }
+  ssl: { rejectUnauthorized: false }
 });
 
 pool.connect()
@@ -55,7 +53,7 @@ app.post("/login", async (req, res) => {
   }
 });
 
-/* GET AGENT BY USERNAME / EMPLOYEE ID */
+/* GET MY AGENT */
 app.get("/my-agent/:username", async (req, res) => {
   try {
     const { username } = req.params;
@@ -117,20 +115,33 @@ app.post("/create-agent", async (req, res) => {
       });
     }
 
-    const exists = await pool.query(
+    const existingAgent = await pool.query(
       "SELECT * FROM public.agents WHERE employee_id=$1 OR email=$2 LIMIT 1",
       [employee_id, email]
     );
 
-    if (exists.rows.length > 0) {
+    if (existingAgent.rows.length > 0) {
       return res.status(400).json({
         success: false,
         message: "Agent already exists"
       });
     }
 
+    const existingUser = await pool.query(
+      "SELECT * FROM public.users WHERE username=$1 LIMIT 1",
+      [employee_id]
+    );
+
+    if (existingUser.rows.length > 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Username already exists"
+      });
+    }
+
     const agentResult = await pool.query(
-      `INSERT INTO public.agents (employee_id, name, email, phone, password, shift)
+      `INSERT INTO public.agents
+       (employee_id, name, email, phone, password, shift)
        VALUES ($1,$2,$3,$4,$5,$6)
        RETURNING *`,
       [employee_id, name, email, phone, password, shift]
@@ -155,24 +166,146 @@ app.post("/create-agent", async (req, res) => {
   }
 });
 
-/* CREDIT CARD LEAD SUBMIT */
+/* CREDIT CARD LEAD SUBMIT - DAY SHIFT */
 app.post("/sales", async (req, res) => {
   try {
-    const { agent_id, name, phone, city, bank } = req.body;
+    const {
+      agent_id,
+      arn,
+      product_applied,
+      full_name_pan,
+      mobile_number,
+      alternate_number,
+      email_id,
+      date_of_birth,
+      gender,
+      current_address,
+      city,
+      state,
+      pincode,
+      residence_type,
+      company_name,
+      job_designation,
+      monthly_in_hand_salary,
+      salary_account_bank,
+      total_work_experience,
+      current_company,
+      working_since,
+      already_have_credit_card,
+      existing_card_bank_name,
+      credit_limit_approx,
+      card_vintage,
+      first_credit_card_application,
+      any_active_loan,
+      emi_amount_approx,
+      salary_credit_regular,
+      pan_available,
+      aadhaar_available,
+      office_id_available,
+      customer_consent_taken,
+      application_date,
+      customer_declaration,
+      amount_balance_20
+    } = req.body;
 
-    if (!agent_id || !name || !phone || !city || !bank) {
+    if (
+      !agent_id ||
+      !product_applied ||
+      !full_name_pan ||
+      !mobile_number ||
+      !city ||
+      !state ||
+      !pincode
+    ) {
       return res.status(400).json({
         success: false,
-        message: "All fields are required"
+        message: "Required fields missing"
       });
     }
 
     const result = await pool.query(
-      `INSERT INTO public.credit_card_leads
-       (agent_id, name, phone, city, bank, status)
-       VALUES ($1,$2,$3,$4,$5,'pending')
-       RETURNING *`,
-      [agent_id, name, phone, city, bank]
+      `INSERT INTO public.credit_card_leads (
+        agent_id,
+        arn,
+        product_applied,
+        full_name_pan,
+        mobile_number,
+        alternate_number,
+        email_id,
+        date_of_birth,
+        gender,
+        current_address,
+        city,
+        state,
+        pincode,
+        residence_type,
+        company_name,
+        job_designation,
+        monthly_in_hand_salary,
+        salary_account_bank,
+        total_work_experience,
+        current_company,
+        working_since,
+        already_have_credit_card,
+        existing_card_bank_name,
+        credit_limit_approx,
+        card_vintage,
+        first_credit_card_application,
+        any_active_loan,
+        emi_amount_approx,
+        salary_credit_regular,
+        pan_available,
+        aadhaar_available,
+        office_id_available,
+        customer_consent_taken,
+        application_date,
+        customer_declaration,
+        amount_balance_20,
+        status
+      ) VALUES (
+        $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,
+        $11,$12,$13,$14,$15,$16,$17,$18,$19,$20,
+        $21,$22,$23,$24,$25,$26,$27,$28,$29,$30,
+        $31,$32,$33,$34,$35,$36,'pending'
+      ) RETURNING *`,
+      [
+        agent_id,
+        arn || null,
+        product_applied || null,
+        full_name_pan || null,
+        mobile_number || null,
+        alternate_number || null,
+        email_id || null,
+        date_of_birth || null,
+        gender || null,
+        current_address || null,
+        city || null,
+        state || null,
+        pincode || null,
+        residence_type || null,
+        company_name || null,
+        job_designation || null,
+        monthly_in_hand_salary || null,
+        salary_account_bank || null,
+        total_work_experience || null,
+        current_company || null,
+        working_since || null,
+        already_have_credit_card || null,
+        existing_card_bank_name || null,
+        credit_limit_approx || null,
+        card_vintage || null,
+        first_credit_card_application || null,
+        any_active_loan || null,
+        emi_amount_approx || null,
+        salary_credit_regular || null,
+        pan_available || null,
+        aadhaar_available || null,
+        office_id_available || null,
+        customer_consent_taken || null,
+        application_date || null,
+        customer_declaration || null,
+        amount_balance_20 || null
+      ]
     );
 
     return res.json({
@@ -188,22 +321,15 @@ app.post("/sales", async (req, res) => {
   }
 });
 
-/* GET ALL CREDIT CARD LEADS FOR ADMIN */
+/* ADMIN GET ALL CREDIT CARD LEADS */
 app.get("/sales", async (req, res) => {
   try {
     const result = await pool.query(`
-      SELECT 
-        c.id,
-        c.agent_id,
+      SELECT
+        c.*,
         a.name AS agent_name,
         a.employee_id,
-        a.shift,
-        c.name AS customer_name,
-        c.phone,
-        c.city,
-        c.bank,
-        c.status,
-        c.created_at
+        a.shift
       FROM public.credit_card_leads c
       LEFT JOIN public.agents a ON c.agent_id = a.id
       ORDER BY c.id DESC
@@ -222,7 +348,7 @@ app.get("/sales", async (req, res) => {
   }
 });
 
-/* GET MY CREDIT CARD LEADS */
+/* AGENT GET MY CREDIT CARD LEADS */
 app.get("/my-sales/:agentId", async (req, res) => {
   try {
     const { agentId } = req.params;
@@ -245,13 +371,13 @@ app.get("/my-sales/:agentId", async (req, res) => {
   }
 });
 
-/* UPDATE CREDIT CARD SALE STATUS */
+/* ADMIN UPDATE CREDIT CARD LEAD STATUS */
 app.put("/sale-status/:id", async (req, res) => {
   try {
     const { id } = req.params;
     const { status } = req.body;
 
-    const allowedStatuses = ["pending", "approved", "rejected"];
+    const allowedStatuses = ["pending", "in process", "approved", "rejected"];
 
     if (!allowedStatuses.includes(status)) {
       return res.status(400).json({
@@ -278,7 +404,34 @@ app.put("/sale-status/:id", async (req, res) => {
   }
 });
 
-/* AUTOPARTS ORDER SUBMIT */
+/* ADMIN UPDATE CREDIT CARD LEAD EXTRA FIELDS */
+app.put("/sales-admin-update/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { call_recording, quality_feedback } = req.body;
+
+    const result = await pool.query(
+      `UPDATE public.credit_card_leads
+       SET call_recording=$1, quality_feedback=$2
+       WHERE id=$3
+       RETURNING *`,
+      [call_recording || null, quality_feedback || null, id]
+    );
+
+    return res.json({
+      success: true,
+      sale: result.rows[0]
+    });
+  } catch (error) {
+    console.log("SALES ADMIN UPDATE ERROR:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Admin update failed"
+    });
+  }
+});
+
+/* AUTOPARTS ORDER SUBMIT - NIGHT SHIFT */
 app.post("/autoparts-orders", async (req, res) => {
   try {
     const {
@@ -392,10 +545,10 @@ app.post("/autoparts-orders", async (req, res) => {
         part_name,
         car_make_in_year,
         brand_name,
-        Number(actual_part_price),
-        Number(commission_amount),
-        discount_applied ? Number(discount_applied) : 0,
-        Number(total_amount),
+        actual_part_price,
+        commission_amount,
+        discount_applied || null,
+        total_amount,
         order_type,
         payment_mode,
         payment_link || null,
@@ -414,12 +567,12 @@ app.post("/autoparts-orders", async (req, res) => {
     console.log("AUTOPARTS ORDER ERROR:", error);
     return res.status(500).json({
       success: false,
-      message: "Autoparts order submit failed"
+      message: "Order submit failed"
     });
   }
 });
 
-/* GET ALL AUTOPARTS ORDERS FOR ADMIN */
+/* ADMIN GET ALL AUTOPARTS ORDERS */
 app.get("/autoparts-orders", async (req, res) => {
   try {
     const result = await pool.query(`
@@ -446,7 +599,7 @@ app.get("/autoparts-orders", async (req, res) => {
   }
 });
 
-/* GET MY AUTOPARTS ORDERS */
+/* AGENT GET MY AUTOPARTS ORDERS */
 app.get("/my-autoparts-orders/:agentId", async (req, res) => {
   try {
     const { agentId } = req.params;
@@ -469,7 +622,7 @@ app.get("/my-autoparts-orders/:agentId", async (req, res) => {
   }
 });
 
-/* UPDATE AUTOPARTS ORDER STATUS */
+/* ADMIN UPDATE AUTOPARTS ORDER STATUS */
 app.put("/autoparts-order-status/:id", async (req, res) => {
   try {
     const { id } = req.params;
@@ -502,7 +655,7 @@ app.put("/autoparts-order-status/:id", async (req, res) => {
   }
 });
 
-/* CHECK-IN FOR ALL AGENTS */
+/* ATTENDANCE CHECK-IN */
 app.post("/attendance/check-in", async (req, res) => {
   try {
     const { agent_id } = req.body;
@@ -541,15 +694,13 @@ app.post("/attendance/check-in", async (req, res) => {
   }
 });
 
-/* CHECK-OUT FOR ALL AGENTS */
+/* ATTENDANCE CHECK-OUT */
 app.post("/attendance/check-out", async (req, res) => {
   try {
     const { agent_id } = req.body;
 
     const existing = await pool.query(
-      `SELECT * FROM public.attendance
-       WHERE agent_id=$1 AND attendance_date=CURRENT_DATE
-       LIMIT 1`,
+      "SELECT * FROM public.attendance WHERE agent_id=$1 AND attendance_date=CURRENT_DATE LIMIT 1",
       [agent_id]
     );
 
@@ -561,13 +712,6 @@ app.post("/attendance/check-out", async (req, res) => {
     }
 
     const attendanceRow = existing.rows[0];
-
-    if (!attendanceRow.check_in) {
-      return res.json({
-        success: false,
-        message: "No check-in found for today"
-      });
-    }
 
     const result = await pool.query(
       `UPDATE public.attendance
@@ -593,7 +737,7 @@ app.post("/attendance/check-out", async (req, res) => {
   }
 });
 
-/* ADMIN ATTENDANCE WITH OPTIONAL DATE FILTER */
+/* ADMIN GET ATTENDANCE */
 app.get("/attendance", async (req, res) => {
   try {
     const { date } = req.query;
@@ -614,7 +758,7 @@ app.get("/attendance", async (req, res) => {
       FROM public.attendance at
       LEFT JOIN public.agents a ON at.agent_id = a.id
     `;
-    let values = [];
+    const values = [];
 
     if (date) {
       query += ` WHERE at.attendance_date = $1 `;
@@ -638,7 +782,7 @@ app.get("/attendance", async (req, res) => {
   }
 });
 
-/* AGENT ATTENDANCE WITH OPTIONAL DATE FILTER */
+/* AGENT GET OWN ATTENDANCE */
 app.get("/my-attendance/:agentId", async (req, res) => {
   try {
     const { agentId } = req.params;
@@ -657,7 +801,7 @@ app.get("/my-attendance/:agentId", async (req, res) => {
       FROM public.attendance
       WHERE agent_id=$1
     `;
-    let values = [agentId];
+    const values = [agentId];
 
     if (date) {
       query += ` AND attendance_date=$2 `;
@@ -677,6 +821,29 @@ app.get("/my-attendance/:agentId", async (req, res) => {
     return res.status(500).json({
       success: false,
       message: "Fetch my attendance failed"
+    });
+  }
+});
+
+/* GET TODAY ATTENDANCE FOR TIMER */
+app.get("/attendance/today/:agentId", async (req, res) => {
+  try {
+    const { agentId } = req.params;
+
+    const result = await pool.query(
+      "SELECT * FROM public.attendance WHERE agent_id=$1 AND attendance_date=CURRENT_DATE LIMIT 1",
+      [agentId]
+    );
+
+    return res.json({
+      success: true,
+      attendance: result.rows[0] || null
+    });
+  } catch (error) {
+    console.log("TODAY ATTENDANCE ERROR:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Fetch today attendance failed"
     });
   }
 });
@@ -707,7 +874,7 @@ app.post("/leave/apply", async (req, res) => {
   }
 });
 
-/* ALL LEAVES FOR ADMIN */
+/* ADMIN GET LEAVES */
 app.get("/leave", async (req, res) => {
   try {
     const result = await pool.query(`
@@ -740,7 +907,7 @@ app.get("/leave", async (req, res) => {
   }
 });
 
-/* MY LEAVES */
+/* AGENT GET OWN LEAVES */
 app.get("/my-leave/:agentId", async (req, res) => {
   try {
     const { agentId } = req.params;
@@ -763,7 +930,7 @@ app.get("/my-leave/:agentId", async (req, res) => {
   }
 });
 
-/* UPDATE LEAVE STATUS */
+/* ADMIN UPDATE LEAVE STATUS */
 app.put("/leave-status/:id", async (req, res) => {
   try {
     const { id } = req.params;
@@ -901,30 +1068,6 @@ app.get("/my-target/:agentId", async (req, res) => {
     return res.status(500).json({
       success: false,
       message: "Fetch target failed"
-    });
-  }
-});
-
-/* UPDATE ACHIEVED TARGET */
-app.put("/targets/achieved/:agentId", async (req, res) => {
-  try {
-    const { agentId } = req.params;
-    const { achieved_value } = req.body;
-
-    const result = await pool.query(
-      "UPDATE public.targets SET achieved_value=$1 WHERE agent_id=$2 RETURNING *",
-      [Number(achieved_value || 0), agentId]
-    );
-
-    return res.json({
-      success: true,
-      target: result.rows[0]
-    });
-  } catch (error) {
-    console.log("TARGET ACHIEVED ERROR:", error);
-    return res.status(500).json({
-      success: false,
-      message: "Update achieved target failed"
     });
   }
 });
