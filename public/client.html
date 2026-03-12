@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+<title>Client Dashboard</title>
+
+<style>
+
+body{
+font-family:Arial;
+margin:0;
+background:#f3f6fb;
+}
+
+.header{
+background:#111827;
+color:white;
+padding:15px 25px;
+display:flex;
+justify-content:space-between;
+}
+
+.container{
+padding:25px;
+}
+
+table{
+width:100%;
+border-collapse:collapse;
+background:white;
+}
+
+th{
+background:#111827;
+color:white;
+padding:12px;
+}
+
+td{
+padding:12px;
+border-bottom:1px solid #eee;
+}
+
+button{
+padding:8px 14px;
+border:none;
+background:#2563eb;
+color:white;
+border-radius:6px;
+cursor:pointer;
+}
+
+select{
+padding:6px;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="header">
+
+<div>Client Dashboard - Credit Card Leads</div>
+
+<button onclick="logout()">Logout</button>
+
+</div>
+
+<div class="container">
+
+<h2>Credit Card Applications</h2>
+
+<table>
+
+<thead>
+
+<tr>
+
+<th>ID</th>
+<th>ARN</th>
+<th>Customer</th>
+<th>City</th>
+<th>Product</th>
+<th>Application Date</th>
+<th>Pincode</th>
+<th>Status</th>
+<th>Update Status</th>
+
+</tr>
+
+</thead>
+
+<tbody id="clientSalesTable"></tbody>
+
+</table>
+
+</div>
+
+<script>
+
+const user = JSON.parse(localStorage.getItem("user"));
+
+if(!user || user.role !== "client"){
+window.location.href="/login.html";
+}
+
+function logout(){
+
+localStorage.removeItem("user");
+window.location.href="/login.html";
+
+}
+
+
+async function loadClientSales(){
+
+const res = await fetch("/client-sales");
+const data = await res.json();
+
+const table = document.getElementById("clientSalesTable");
+
+table.innerHTML="";
+
+data.sales.forEach(s=>{
+
+table.innerHTML += `
+
+<tr>
+
+<td>${s.id}</td>
+<td>${s.arn || ""}</td>
+<td>${s.customer_name || ""}</td>
+<td>${s.city || ""}</td>
+<td>${s.product || ""}</td>
+<td>${s.application_date || ""}</td>
+<td>${s.pincode || ""}</td>
+<td>${s.status}</td>
+
+<td>
+
+<select onchange="updateStatus(${s.id},this.value)">
+
+<option value="">Select</option>
+<option value="pending">Pending</option>
+<option value="in process">In Process</option>
+<option value="approved">Approved</option>
+<option value="rejected">Rejected</option>
+
+</select>
+
+</td>
+
+</tr>
+
+`;
+
+});
+
+}
+
+
+async function updateStatus(id,status){
+
+if(!status) return;
+
+await fetch("/client-sale-status/"+id,{
+method:"PUT",
+headers:{
+"Content-Type":"application/json"
+},
+body:JSON.stringify({status})
+});
+
+loadClientSales();
+
+}
+
+loadClientSales();
+
+</script>
+
+</body>
+</html>
