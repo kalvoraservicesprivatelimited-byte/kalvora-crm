@@ -1132,73 +1132,8 @@ app.get("/my-target/:agentId", async (req, res) => {
   }
 });
 
-/* CLIENT SALES ROUTE */
-app.get("/client-sales", async (req,res)=>{
-
-try{
-
-const result = await pool.query(`
-SELECT
-id,
-arn,
-full_name_pan AS customer_name,
-city,
-product_applied,
-application_date,
-pincode,
-status
-FROM credit_card_leads
-ORDER BY id DESC
-`)
-
-res.json({
-success:true,
-sales:result.rows
-})
-
-}catch(error){
-
-console.log(error)
-
-res.status(500).json({
-success:false
-})
-
-}
-
-})
-
-
-/* CLIENT UPDATE STATUS */
-
-app.put("/client-sale-status/:id", async (req,res)=>{
-
-try{
-
-const {id}=req.params
-const {status}=req.body
-
-await pool.query(
-"UPDATE credit_card_leads SET status=$1 WHERE id=$2",
-[status,id]
-)
-
-res.json({success:true})
-
-}catch(error){
-
-console.log(error)
-
-res.status(500).json({success:false})
-
-}
-
-})
-
-
-
 const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, "0.0.0.0", () => {
-console.log(`Server running on port ${PORT}`);
+  console.log(`Server running on port ${PORT}`);
 });
