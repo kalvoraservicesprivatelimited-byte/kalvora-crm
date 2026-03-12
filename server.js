@@ -372,34 +372,62 @@ app.get("/my-sales/:agentId", async (req, res) => {
 });
 
 /* ADMIN UPDATE CREDIT CARD LEAD STATUS */
-app.put("/sale-status/:id", async (req, res) => {
+/* DELETE CREDIT CARD LEAD */
+app.delete("/sales/:id", async (req, res) => {
   try {
     const { id } = req.params;
-    const { status } = req.body;
 
-    const allowedStatuses = ["pending", "in process", "approved", "rejected"];
+    const result = await pool.query(
+      "DELETE FROM public.credit_card_leads WHERE id=$1 RETURNING *",
+      [id]
+    );
 
-    if (!allowedStatuses.includes(status)) {
-      return res.status(400).json({
+    if (result.rows.length === 0) {
+      return res.status(404).json({
         success: false,
-        message: "Invalid status"
+        message: "Lead not found"
       });
     }
 
+    return res.json({
+      success: true,
+      message: "Lead deleted successfully"
+    });
+  } catch (error) {
+    console.log("DELETE SALE ERROR:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Delete lead failed"
+    });
+  }
+});
+
+/* DELETE AUTOPARTS ORDER */
+app.delete("/autoparts-orders/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+
     const result = await pool.query(
-      "UPDATE public.credit_card_leads SET status=$1 WHERE id=$2 RETURNING *",
-      [status, id]
+      "DELETE FROM public.autoparts_orders WHERE id=$1 RETURNING *",
+      [id]
     );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "Order not found"
+      });
+    }
 
     return res.json({
       success: true,
-      sale: result.rows[0]
+      message: "Order deleted successfully"
     });
   } catch (error) {
-    console.log("SALE STATUS ERROR:", error);
+    console.log("DELETE AUTOPARTS ORDER ERROR:", error);
     return res.status(500).json({
       success: false,
-      message: "Update status failed"
+      message: "Delete order failed"
     });
   }
 });

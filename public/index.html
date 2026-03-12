@@ -117,6 +117,9 @@
       padding:8px 12px;
       margin-top:0;
     }
+    .delete-btn{
+      background:#dc2626;
+    }
     .action-select{
       min-width:150px;
     }
@@ -343,6 +346,7 @@
                 <th>Status</th>
                 <th>View</th>
                 <th>Update Status</th>
+                <th>Delete</th>
               </tr>
             </thead>
             <tbody id="salesTableAdmin"></tbody>
@@ -372,6 +376,7 @@
                 <th>Status</th>
                 <th>View</th>
                 <th>Update Status</th>
+                <th>Delete</th>
               </tr>
             </thead>
             <tbody id="autopartsOrdersTable"></tbody>
@@ -518,10 +523,6 @@
     if (!s) return;
 
     currentCreditLeadId = s.id;
-    document.getElementById("adminCreditUpdateBox").style.display = "block";
-    document.getElementById("adminCallRecording").value = s.call_recording || "";
-    document.getElementById("adminQualityFeedback").value = s.quality_feedback || "";
-    document.getElementById("adminCreditUpdateMsg").innerText = "";
 
     openDetailsModal("Credit Card Lead Details", [
       { label: "Lead ID", value: s.id },
@@ -568,13 +569,16 @@
       { label: "Status", value: s.status || "" },
       { label: "Submitted At", value: formatDateTime(s.created_at) }
     ]);
+
+    document.getElementById("adminCreditUpdateBox").style.display = "block";
+    document.getElementById("adminCallRecording").value = s.call_recording || "";
+    document.getElementById("adminQualityFeedback").value = s.quality_feedback || "";
+    document.getElementById("adminCreditUpdateMsg").innerText = "";
   }
 
   function viewAutopartsOrder(index) {
     const o = autopartsCache[index];
     if (!o) return;
-
-    document.getElementById("adminCreditUpdateBox").style.display = "none";
 
     openDetailsModal("Autoparts Order Details", [
       { label: "Order ID", value: o.id },
@@ -608,6 +612,8 @@
       { label: "Status", value: o.status || "" },
       { label: "Submitted At", value: formatDateTime(o.created_at) }
     ]);
+
+    document.getElementById("adminCreditUpdateBox").style.display = "none";
   }
 
   async function saveCreditLeadAdminFields(){
@@ -625,7 +631,6 @@
 
       const data = await res.json();
       document.getElementById("adminCreditUpdateMsg").innerText = data.success ? "Saved successfully" : (data.message || "Save failed");
-
       await loadSalesAdmin();
     } catch (error) {
       console.log("SAVE CREDIT ADMIN FIELDS ERROR:", error);
@@ -772,7 +777,7 @@
       salesCache = data.sales || [];
 
       if (!data.success || !data.sales || data.sales.length === 0) {
-        table.innerHTML = `<tr><td colspan="10">No leads found</td></tr>`;
+        table.innerHTML = `<tr><td colspan="11">No leads found</td></tr>`;
         return;
       }
 
@@ -797,12 +802,15 @@
                 <option value="rejected" ${s.status === "rejected" ? "selected" : ""}>Rejected</option>
               </select>
             </td>
+            <td>
+              <button class="small-btn delete-btn" onclick="deleteSale(${s.id})">Delete</button>
+            </td>
           </tr>
         `;
       });
     } catch (error) {
       console.log("LOAD SALES ERROR:", error);
-      document.getElementById("salesTableAdmin").innerHTML = `<tr><td colspan="10">Failed to load leads</td></tr>`;
+      document.getElementById("salesTableAdmin").innerHTML = `<tr><td colspan="11">Failed to load leads</td></tr>`;
     }
   }
 
@@ -829,6 +837,30 @@
     }
   }
 
+  async function deleteSale(id){
+    const ok = confirm("Are you sure you want to delete this lead permanently?");
+    if (!ok) return;
+
+    try {
+      const res = await fetch("/sales/" + id, {
+        method: "DELETE"
+      });
+
+      const data = await res.json();
+
+      if (!data.success) {
+        alert(data.message || "Delete failed");
+        return;
+      }
+
+      alert("Lead deleted successfully");
+      await loadSalesAdmin();
+    } catch (error) {
+      console.log("DELETE SALE ERROR:", error);
+      alert("Delete failed");
+    }
+  }
+
   async function loadAutopartsOrders(){
     try {
       const res = await fetch("/autoparts-orders");
@@ -839,7 +871,7 @@
       autopartsCache = data.orders || [];
 
       if (!data.success || !data.orders || data.orders.length === 0) {
-        table.innerHTML = `<tr><td colspan="12">No autoparts orders found</td></tr>`;
+        table.innerHTML = `<tr><td colspan="13">No autoparts orders found</td></tr>`;
         return;
       }
 
@@ -865,12 +897,15 @@
                 <option value="rejected" ${o.status === "rejected" ? "selected" : ""}>Rejected</option>
               </select>
             </td>
+            <td>
+              <button class="small-btn delete-btn" onclick="deleteAutopartsOrder(${o.id})">Delete</button>
+            </td>
           </tr>
         `;
       });
     } catch (error) {
       console.log("LOAD AUTOPARTS ORDERS ERROR:", error);
-      document.getElementById("autopartsOrdersTable").innerHTML = `<tr><td colspan="12">Failed to load autoparts orders</td></tr>`;
+      document.getElementById("autopartsOrdersTable").innerHTML = `<tr><td colspan="13">Failed to load autoparts orders</td></tr>`;
     }
   }
 
@@ -894,6 +929,30 @@
     } catch (error) {
       console.log("UPDATE AUTOPARTS STATUS ERROR:", error);
       alert("Status update failed");
+    }
+  }
+
+  async function deleteAutopartsOrder(id){
+    const ok = confirm("Are you sure you want to delete this order permanently?");
+    if (!ok) return;
+
+    try {
+      const res = await fetch("/autoparts-orders/" + id, {
+        method: "DELETE"
+      });
+
+      const data = await res.json();
+
+      if (!data.success) {
+        alert(data.message || "Delete failed");
+        return;
+      }
+
+      alert("Order deleted successfully");
+      await loadAutopartsOrders();
+    } catch (error) {
+      console.log("DELETE AUTOPARTS ORDER ERROR:", error);
+      alert("Delete failed");
     }
   }
 
