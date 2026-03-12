@@ -77,12 +77,14 @@
           localStorage.setItem("user", JSON.stringify(data.user));
 
           if (data.user.role === "admin") {
-            window.location.href = "/index.html";
-          } else if (data.user.role === "agent") {
-            window.location.href = "/agent.html";
-          } else {
-            msg.innerText = "Invalid role";
-          }
+  window.location.href = "/index.html";
+} else if (data.user.role === "agent") {
+  window.location.href = "/agent.html";
+} else if (data.user.role === "client") {
+  window.location.href = "/client.html";
+} else {
+  msg.innerText = "Invalid role";
+}
         } else {
           msg.innerText = data.message || "Invalid login";
         }
