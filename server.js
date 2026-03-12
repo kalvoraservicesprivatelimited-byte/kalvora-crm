@@ -372,6 +372,38 @@ app.get("/my-sales/:agentId", async (req, res) => {
 });
 
 /* ADMIN UPDATE CREDIT CARD LEAD STATUS */
+app.put("/sale-status/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status } = req.body;
+
+    const allowedStatuses = ["pending", "in process", "approved", "rejected"];
+
+    if (!allowedStatuses.includes(status)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid status"
+      });
+    }
+
+    const result = await pool.query(
+      "UPDATE public.credit_card_leads SET status=$1 WHERE id=$2 RETURNING *",
+      [status, id]
+    );
+
+    return res.json({
+      success: true,
+      sale: result.rows[0]
+    });
+  } catch (error) {
+    console.log("SALE STATUS ERROR:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Update status failed"
+    });
+  }
+});
+
 /* DELETE CREDIT CARD LEAD */
 app.delete("/sales/:id", async (req, res) => {
   try {
