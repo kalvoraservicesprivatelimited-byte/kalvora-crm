@@ -348,6 +348,36 @@ app.get("/sales", async (req, res) => {
   }
 });
 
+/* CLIENT GET CREDIT CARD LEADS (LIMITED VIEW) */
+app.get("/client-sales", async (req, res) => {
+  try {
+    const result = await pool.query(`
+      SELECT
+        id,
+        arn,
+        full_name_pan AS customer_name,
+        city,
+        product_applied AS product,
+        application_date,
+        pincode,
+        status
+      FROM public.credit_card_leads
+      ORDER BY id DESC
+    `);
+
+    return res.json({
+      success: true,
+      sales: result.rows
+    });
+  } catch (error) {
+    console.log("CLIENT SALES ERROR:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Fetch client sales failed"
+    });
+  }
+});
+
 /* AGENT GET MY CREDIT CARD LEADS */
 app.get("/my-sales/:agentId", async (req, res) => {
   try {
@@ -404,6 +434,39 @@ app.put("/sale-status/:id", async (req, res) => {
   }
 });
 
+/* CLIENT UPDATE CREDIT CARD LEAD STATUS */
+app.put("/client-sale-status/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status } = req.body;
+
+    const allowedStatuses = ["pending", "in process", "approved", "rejected"];
+
+    if (!allowedStatuses.includes(status)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid status"
+      });
+    }
+
+    const result = await pool.query(
+      "UPDATE public.credit_card_leads SET status=$1 WHERE id=$2 RETURNING *",
+      [status, id]
+    );
+
+    return res.json({
+      success: true,
+      sale: result.rows[0]
+    });
+  } catch (error) {
+    console.log("CLIENT STATUS UPDATE ERROR:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Client status update failed"
+    });
+  }
+});
+
 /* DELETE CREDIT CARD LEAD */
 app.delete("/sales/:id", async (req, res) => {
   try {
@@ -430,36 +493,6 @@ app.delete("/sales/:id", async (req, res) => {
     return res.status(500).json({
       success: false,
       message: "Delete lead failed"
-    });
-  }
-});
-
-/* DELETE AUTOPARTS ORDER */
-app.delete("/autoparts-orders/:id", async (req, res) => {
-  try {
-    const { id } = req.params;
-
-    const result = await pool.query(
-      "DELETE FROM public.autoparts_orders WHERE id=$1 RETURNING *",
-      [id]
-    );
-
-    if (result.rows.length === 0) {
-      return res.status(404).json({
-        success: false,
-        message: "Order not found"
-      });
-    }
-
-    return res.json({
-      success: true,
-      message: "Order deleted successfully"
-    });
-  } catch (error) {
-    console.log("DELETE AUTOPARTS ORDER ERROR:", error);
-    return res.status(500).json({
-      success: false,
-      message: "Delete order failed"
     });
   }
 });
@@ -715,6 +748,36 @@ app.put("/autoparts-order-status/:id", async (req, res) => {
   }
 });
 
+/* DELETE AUTOPARTS ORDER */
+app.delete("/autoparts-orders/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const result = await pool.query(
+      "DELETE FROM public.autoparts_orders WHERE id=$1 RETURNING *",
+      [id]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "Order not found"
+      });
+    }
+
+    return res.json({
+      success: true,
+      message: "Order deleted successfully"
+    });
+  } catch (error) {
+    console.log("DELETE AUTOPARTS ORDER ERROR:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Delete order failed"
+    });
+  }
+});
+
 /* ATTENDANCE CHECK-IN */
 app.post("/attendance/check-in", async (req, res) => {
   try {
@@ -881,29 +944,6 @@ app.get("/my-attendance/:agentId", async (req, res) => {
     return res.status(500).json({
       success: false,
       message: "Fetch my attendance failed"
-    });
-  }
-});
-
-/* GET TODAY ATTENDANCE FOR TIMER */
-app.get("/attendance/today/:agentId", async (req, res) => {
-  try {
-    const { agentId } = req.params;
-
-    const result = await pool.query(
-      "SELECT * FROM public.attendance WHERE agent_id=$1 AND attendance_date=CURRENT_DATE LIMIT 1",
-      [agentId]
-    );
-
-    return res.json({
-      success: true,
-      attendance: result.rows[0] || null
-    });
-  } catch (error) {
-    console.log("TODAY ATTENDANCE ERROR:", error);
-    return res.status(500).json({
-      success: false,
-      message: "Fetch today attendance failed"
     });
   }
 });

@@ -177,14 +177,18 @@
       color:#111827;
       word-break:break-word;
     }
-    .filters{
+    .date-filter-box{
       display:flex;
       gap:10px;
-      align-items:end;
+      align-items:center;
       flex-wrap:wrap;
       margin-bottom:10px;
     }
-    .filters input,.filters select,.filters button{
+    .date-filter-box input{
+      max-width:220px;
+      margin-top:0;
+    }
+    .date-filter-box button{
       width:auto;
       margin-top:0;
     }
@@ -324,44 +328,6 @@
 
       <div id="salesSection" class="section">
         <div class="card">
-          <div class="filters">
-            <div>
-              <label>Agent</label>
-              <select id="salesFilterAgent">
-                <option value="">All</option>
-              </select>
-            </div>
-            <div>
-              <label>Status</label>
-              <select id="salesFilterStatus">
-                <option value="">All</option>
-                <option value="pending">pending</option>
-                <option value="in process">in process</option>
-                <option value="approved">approved</option>
-                <option value="rejected">rejected</option>
-              </select>
-            </div>
-            <div>
-              <label>City</label>
-              <input id="salesFilterCity" placeholder="City">
-            </div>
-            <div>
-              <label>Product</label>
-              <input id="salesFilterProduct" placeholder="Product">
-            </div>
-            <div>
-              <label>From</label>
-              <input type="date" id="salesFilterFrom">
-            </div>
-            <div>
-              <label>To</label>
-              <input type="date" id="salesFilterTo">
-            </div>
-            <button onclick="applySalesFilters()">Filter</button>
-            <button onclick="resetSalesFilters()">Reset</button>
-            <button onclick="downloadSalesCSV()">Download Excel Report</button>
-          </div>
-
           <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;">
             <h3 style="margin:0;">All Credit Card Leads</h3>
             <button class="refresh-btn" onclick="loadSalesAdmin()">Refresh Leads</button>
@@ -377,7 +343,6 @@
                 <th>Mobile</th>
                 <th>City</th>
                 <th>Product</th>
-                <th>Application Date</th>
                 <th>Status</th>
                 <th>View</th>
                 <th>Update Status</th>
@@ -391,47 +356,6 @@
 
       <div id="autopartsSection" class="section">
         <div class="card">
-          <div class="filters">
-            <div>
-              <label>Agent</label>
-              <select id="autopartsFilterAgent">
-                <option value="">All</option>
-              </select>
-            </div>
-            <div>
-              <label>Status</label>
-              <select id="autopartsFilterStatus">
-                <option value="">All</option>
-                <option value="pending">pending</option>
-                <option value="approved">approved</option>
-                <option value="rejected">rejected</option>
-              </select>
-            </div>
-            <div>
-              <label>City</label>
-              <input id="autopartsFilterCity" placeholder="City">
-            </div>
-            <div>
-              <label>Part</label>
-              <input id="autopartsFilterPart" placeholder="Part">
-            </div>
-            <div>
-              <label>Payment Mode</label>
-              <input id="autopartsFilterPayment" placeholder="Payment Mode">
-            </div>
-            <div>
-              <label>From</label>
-              <input type="date" id="autopartsFilterFrom">
-            </div>
-            <div>
-              <label>To</label>
-              <input type="date" id="autopartsFilterTo">
-            </div>
-            <button onclick="applyAutopartsFilters()">Filter</button>
-            <button onclick="resetAutopartsFilters()">Reset</button>
-            <button onclick="downloadAutopartsCSV()">Download Excel Report</button>
-          </div>
-
           <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;">
             <h3 style="margin:0;">All Autoparts Orders</h3>
             <button class="refresh-btn" onclick="loadAutopartsOrders()">Refresh Orders</button>
@@ -462,34 +386,12 @@
 
       <div id="attendanceSection" class="section">
         <div class="card">
-          <div class="filters">
-            <div>
-              <label>Agent</label>
-              <select id="attendanceFilterAgent">
-                <option value="">All</option>
-              </select>
-            </div>
-            <div>
-              <label>Shift</label>
-              <select id="attendanceFilterShift">
-                <option value="">All</option>
-                <option value="day">day</option>
-                <option value="night">night</option>
-              </select>
-            </div>
-            <div>
-              <label>From</label>
-              <input type="date" id="attendanceFilterFrom">
-            </div>
-            <div>
-              <label>To</label>
-              <input type="date" id="attendanceFilterTo">
-            </div>
-            <button onclick="applyAttendanceFilters()">Filter</button>
-            <button onclick="resetAttendanceFilters()">Reset</button>
-            <button onclick="downloadAttendanceCSV()">Download Excel Report</button>
+          <div class="date-filter-box">
+            <h3 style="margin:0;">Attendance</h3>
+            <input type="date" id="adminAttendanceDate">
+            <button onclick="filterAdminAttendance()">Filter</button>
+            <button onclick="resetAdminAttendance()">Reset</button>
           </div>
-
           <table>
             <thead>
               <tr>
@@ -511,39 +413,6 @@
 
       <div id="leavesSection" class="section">
         <div class="card">
-          <div class="filters">
-            <div>
-              <label>Agent</label>
-              <select id="leavesFilterAgent">
-                <option value="">All</option>
-              </select>
-            </div>
-            <div>
-              <label>Status</label>
-              <select id="leavesFilterStatus">
-                <option value="">All</option>
-                <option value="pending">pending</option>
-                <option value="approved">approved</option>
-                <option value="rejected">rejected</option>
-              </select>
-            </div>
-            <div>
-              <label>Type</label>
-              <input id="leavesFilterType" placeholder="Leave Type">
-            </div>
-            <div>
-              <label>From</label>
-              <input type="date" id="leavesFilterFrom">
-            </div>
-            <div>
-              <label>To</label>
-              <input type="date" id="leavesFilterTo">
-            </div>
-            <button onclick="applyLeavesFilters()">Filter</button>
-            <button onclick="resetLeavesFilters()">Reset</button>
-            <button onclick="downloadLeavesCSV()">Download Excel Report</button>
-          </div>
-
           <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;">
             <h3 style="margin:0;">Leaves</h3>
             <button class="refresh-btn" onclick="loadLeaves()">Refresh Leaves</button>
@@ -597,14 +466,7 @@
   }
 
   let salesCache = [];
-  let filteredSales = [];
   let autopartsCache = [];
-  let filteredAutoparts = [];
-  let attendanceCache = [];
-  let filteredAttendance = [];
-  let leavesCache = [];
-  let filteredLeaves = [];
-  let agentsCache = [];
   let currentCreditLeadId = null;
 
   function showSection(id){
@@ -632,74 +494,7 @@
 
   function makeLink(value){
     if (!value) return "";
-    return `<a href="${value}" target="_blank">Open</a>`;
-  }
-
-  function normalizeText(v){
-    return String(v || "").toLowerCase().trim();
-  }
-
-  function parseOnlyDate(v){
-    if (!v) return "";
-    if (String(v).includes("T")) return String(v).split("T")[0];
-    return String(v).slice(0,10);
-  }
-
-  function inDateRange(value, from, to){
-    const d = parseOnlyDate(value);
-    if (!d) return false;
-    if (from && d < from) return false;
-    if (to && d > to) return false;
-    return true;
-  }
-
-  function downloadCSV(filename, rows){
-    if (!rows || rows.length === 0) {
-      alert("No data found");
-      return;
-    }
-
-    const headers = Object.keys(rows[0]);
-    const csv = [
-      headers.join(","),
-      ...rows.map(row =>
-        headers.map(h => {
-          const val = row[h] ?? "";
-          return `"${String(val).replace(/"/g, '""')}"`;
-        }).join(",")
-      )
-    ].join("\n");
-
-    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
-    const link = document.createElement("a");
-    link.href = URL.createObjectURL(blob);
-    link.setAttribute("download", filename);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  }
-
-  function populateAgentFilters(){
-    const ids = [
-      "salesFilterAgent",
-      "autopartsFilterAgent",
-      "attendanceFilterAgent",
-      "leavesFilterAgent",
-      "target_agent_id"
-    ];
-
-    ids.forEach(id => {
-      const el = document.getElementById(id);
-      if (!el) return;
-      const old = el.value;
-      el.innerHTML = id === "target_agent_id" ? "" : `<option value="">All</option>`;
-
-      agentsCache.forEach(a => {
-        el.innerHTML += `<option value="${a.id}">${a.employee_id} - ${a.name}</option>`;
-      });
-
-      if ([...el.options].some(o => o.value === old)) el.value = old;
-    });
+    return `<a href="${value}" target="_blank">${value}</a>`;
   }
 
   function openDetailsModal(title, rows) {
@@ -724,7 +519,7 @@
   }
 
   function viewCreditLead(index) {
-    const s = filteredSales[index];
+    const s = salesCache[index];
     if (!s) return;
 
     currentCreditLeadId = s.id;
@@ -782,7 +577,7 @@
   }
 
   function viewAutopartsOrder(index) {
-    const o = filteredAutoparts[index];
+    const o = autopartsCache[index];
     if (!o) return;
 
     openDetailsModal("Autoparts Order Details", [
@@ -882,14 +677,15 @@
       const data = await res.json();
 
       const table = document.getElementById("agentsTable");
+      const select = document.getElementById("target_agent_id");
+
       table.innerHTML = "";
+      select.innerHTML = "";
 
       if (!data.success || !data.agents || data.agents.length === 0) {
         table.innerHTML = `<tr><td colspan="6">No agents found</td></tr>`;
         return;
       }
-
-      agentsCache = data.agents;
 
       data.agents.forEach(a => {
         table.innerHTML += `
@@ -902,9 +698,9 @@
             <td>${a.shift || ""}</td>
           </tr>
         `;
-      });
 
-      populateAgentFilters();
+        select.innerHTML += `<option value="${a.id}">${a.employee_id} - ${a.name}</option>`;
+      });
     } catch (error) {
       console.log("LOAD AGENTS ERROR:", error);
     }
@@ -971,104 +767,51 @@
     }
   }
 
-  function renderSalesTable(rows){
-    const table = document.getElementById("salesTableAdmin");
-    table.innerHTML = "";
-
-    if (!rows || rows.length === 0) {
-      table.innerHTML = `<tr><td colspan="12">No leads found</td></tr>`;
-      return;
-    }
-
-    rows.forEach((s, index) => {
-      table.innerHTML += `
-        <tr>
-          <td>${s.id || ""}</td>
-          <td>${s.employee_id || ""}</td>
-          <td>${s.agent_name || ""}</td>
-          <td>${s.full_name_pan || s.customer_name || ""}</td>
-          <td>${s.mobile_number || s.phone || ""}</td>
-          <td>${s.city || ""}</td>
-          <td>${s.product_applied || s.bank || ""}</td>
-          <td>${s.application_date || ""}</td>
-          <td>${s.status || ""}</td>
-          <td><button class="small-btn" onclick="viewCreditLead(${index})">View</button></td>
-          <td>
-            <select class="action-select" onchange="updateSaleStatus(${s.id}, this.value)">
-              <option value="">Select</option>
-              <option value="pending" ${s.status === "pending" ? "selected" : ""}>Pending</option>
-              <option value="in process" ${s.status === "in process" ? "selected" : ""}>In Process</option>
-              <option value="approved" ${s.status === "approved" ? "selected" : ""}>Approved</option>
-              <option value="rejected" ${s.status === "rejected" ? "selected" : ""}>Rejected</option>
-            </select>
-          </td>
-          <td>
-            <button class="small-btn delete-btn" onclick="deleteSale(${s.id})">Delete</button>
-          </td>
-        </tr>
-      `;
-    });
-  }
-
   async function loadSalesAdmin(){
     try {
       const res = await fetch("/sales");
       const data = await res.json();
 
+      const table = document.getElementById("salesTableAdmin");
+      table.innerHTML = "";
       salesCache = data.sales || [];
-      filteredSales = [...salesCache];
-      renderSalesTable(filteredSales);
+
+      if (!data.success || !data.sales || data.sales.length === 0) {
+        table.innerHTML = `<tr><td colspan="11">No leads found</td></tr>`;
+        return;
+      }
+
+      data.sales.forEach((s, index) => {
+        table.innerHTML += `
+          <tr>
+            <td>${s.id || ""}</td>
+            <td>${s.employee_id || ""}</td>
+            <td>${s.agent_name || ""}</td>
+            <td>${s.full_name_pan || s.customer_name || ""}</td>
+            <td>${s.mobile_number || s.phone || ""}</td>
+            <td>${s.city || ""}</td>
+            <td>${s.product_applied || s.bank || ""}</td>
+            <td>${s.status || ""}</td>
+            <td><button class="small-btn" onclick="viewCreditLead(${index})">View</button></td>
+            <td>
+              <select class="action-select" onchange="updateSaleStatus(${s.id}, this.value)">
+                <option value="">Select</option>
+                <option value="pending" ${s.status === "pending" ? "selected" : ""}>Pending</option>
+                <option value="in process" ${s.status === "in process" ? "selected" : ""}>In Process</option>
+                <option value="approved" ${s.status === "approved" ? "selected" : ""}>Approved</option>
+                <option value="rejected" ${s.status === "rejected" ? "selected" : ""}>Rejected</option>
+              </select>
+            </td>
+            <td>
+              <button class="small-btn delete-btn" onclick="deleteSale(${s.id})">Delete</button>
+            </td>
+          </tr>
+        `;
+      });
     } catch (error) {
       console.log("LOAD SALES ERROR:", error);
-      document.getElementById("salesTableAdmin").innerHTML = `<tr><td colspan="12">Failed to load leads</td></tr>`;
+      document.getElementById("salesTableAdmin").innerHTML = `<tr><td colspan="11">Failed to load leads</td></tr>`;
     }
-  }
-
-  function applySalesFilters(){
-    const agent = document.getElementById("salesFilterAgent").value;
-    const status = normalizeText(document.getElementById("salesFilterStatus").value);
-    const city = normalizeText(document.getElementById("salesFilterCity").value);
-    const product = normalizeText(document.getElementById("salesFilterProduct").value);
-    const from = document.getElementById("salesFilterFrom").value;
-    const to = document.getElementById("salesFilterTo").value;
-
-    filteredSales = salesCache.filter(s => {
-      if (agent && String(s.agent_id) !== String(agent)) return false;
-      if (status && normalizeText(s.status) !== status) return false;
-      if (city && !normalizeText(s.city).includes(city)) return false;
-      if (product && !normalizeText(s.product_applied || s.bank).includes(product)) return false;
-      if ((from || to) && !inDateRange(s.application_date || s.created_at, from, to)) return false;
-      return true;
-    });
-
-    renderSalesTable(filteredSales);
-  }
-
-  function resetSalesFilters(){
-    document.getElementById("salesFilterAgent").value = "";
-    document.getElementById("salesFilterStatus").value = "";
-    document.getElementById("salesFilterCity").value = "";
-    document.getElementById("salesFilterProduct").value = "";
-    document.getElementById("salesFilterFrom").value = "";
-    document.getElementById("salesFilterTo").value = "";
-    filteredSales = [...salesCache];
-    renderSalesTable(filteredSales);
-  }
-
-  function downloadSalesCSV(){
-    downloadCSV("credit_card_leads_report.csv", filteredSales.map(s => ({
-      id: s.id,
-      employee_id: s.employee_id || "",
-      agent_name: s.agent_name || "",
-      customer: s.full_name_pan || "",
-      mobile: s.mobile_number || "",
-      city: s.city || "",
-      product: s.product_applied || "",
-      application_date: s.application_date || "",
-      status: s.status || "",
-      call_recording: s.call_recording || "",
-      quality_feedback: s.quality_feedback || ""
-    })));
   }
 
   async function updateSaleStatus(id, status){
@@ -1118,106 +861,52 @@
     }
   }
 
-  function renderAutopartsTable(rows){
-    const table = document.getElementById("autopartsOrdersTable");
-    table.innerHTML = "";
-
-    if (!rows || rows.length === 0) {
-      table.innerHTML = `<tr><td colspan="13">No autoparts orders found</td></tr>`;
-      return;
-    }
-
-    rows.forEach((o, index) => {
-      table.innerHTML += `
-        <tr>
-          <td>${o.id || ""}</td>
-          <td>${o.employee_id || ""}</td>
-          <td>${o.agent_name || ""}</td>
-          <td>${o.customer_name || ""}</td>
-          <td>${o.customer_contact_number || ""}</td>
-          <td>${o.city || ""}</td>
-          <td>${o.part_name || ""}</td>
-          <td>${o.total_amount || ""}</td>
-          <td>${o.payment_mode || ""}</td>
-          <td>${o.status || ""}</td>
-          <td><button class="small-btn" onclick="viewAutopartsOrder(${index})">View</button></td>
-          <td>
-            <select class="action-select" onchange="updateAutopartsOrderStatus(${o.id}, this.value)">
-              <option value="">Select</option>
-              <option value="pending" ${o.status === "pending" ? "selected" : ""}>Pending</option>
-              <option value="approved" ${o.status === "approved" ? "selected" : ""}>Approved</option>
-              <option value="rejected" ${o.status === "rejected" ? "selected" : ""}>Rejected</option>
-            </select>
-          </td>
-          <td>
-            <button class="small-btn delete-btn" onclick="deleteAutopartsOrder(${o.id})">Delete</button>
-          </td>
-        </tr>
-      `;
-    });
-  }
-
   async function loadAutopartsOrders(){
     try {
       const res = await fetch("/autoparts-orders");
       const data = await res.json();
 
+      const table = document.getElementById("autopartsOrdersTable");
+      table.innerHTML = "";
       autopartsCache = data.orders || [];
-      filteredAutoparts = [...autopartsCache];
-      renderAutopartsTable(filteredAutoparts);
+
+      if (!data.success || !data.orders || data.orders.length === 0) {
+        table.innerHTML = `<tr><td colspan="13">No autoparts orders found</td></tr>`;
+        return;
+      }
+
+      data.orders.forEach((o, index) => {
+        table.innerHTML += `
+          <tr>
+            <td>${o.id || ""}</td>
+            <td>${o.employee_id || ""}</td>
+            <td>${o.agent_name || ""}</td>
+            <td>${o.customer_name || ""}</td>
+            <td>${o.customer_contact_number || ""}</td>
+            <td>${o.city || ""}</td>
+            <td>${o.part_name || ""}</td>
+            <td>${o.total_amount || ""}</td>
+            <td>${o.payment_mode || ""}</td>
+            <td>${o.status || ""}</td>
+            <td><button class="small-btn" onclick="viewAutopartsOrder(${index})">View</button></td>
+            <td>
+              <select class="action-select" onchange="updateAutopartsOrderStatus(${o.id}, this.value)">
+                <option value="">Select</option>
+                <option value="pending" ${o.status === "pending" ? "selected" : ""}>Pending</option>
+                <option value="approved" ${o.status === "approved" ? "selected" : ""}>Approved</option>
+                <option value="rejected" ${o.status === "rejected" ? "selected" : ""}>Rejected</option>
+              </select>
+            </td>
+            <td>
+              <button class="small-btn delete-btn" onclick="deleteAutopartsOrder(${o.id})">Delete</button>
+            </td>
+          </tr>
+        `;
+      });
     } catch (error) {
       console.log("LOAD AUTOPARTS ORDERS ERROR:", error);
       document.getElementById("autopartsOrdersTable").innerHTML = `<tr><td colspan="13">Failed to load autoparts orders</td></tr>`;
     }
-  }
-
-  function applyAutopartsFilters(){
-    const agent = document.getElementById("autopartsFilterAgent").value;
-    const status = normalizeText(document.getElementById("autopartsFilterStatus").value);
-    const city = normalizeText(document.getElementById("autopartsFilterCity").value);
-    const part = normalizeText(document.getElementById("autopartsFilterPart").value);
-    const payment = normalizeText(document.getElementById("autopartsFilterPayment").value);
-    const from = document.getElementById("autopartsFilterFrom").value;
-    const to = document.getElementById("autopartsFilterTo").value;
-
-    filteredAutoparts = autopartsCache.filter(o => {
-      if (agent && String(o.agent_id) !== String(agent)) return false;
-      if (status && normalizeText(o.status) !== status) return false;
-      if (city && !normalizeText(o.city).includes(city)) return false;
-      if (part && !normalizeText(o.part_name).includes(part)) return false;
-      if (payment && !normalizeText(o.payment_mode).includes(payment)) return false;
-      if ((from || to) && !inDateRange(o.created_at, from, to)) return false;
-      return true;
-    });
-
-    renderAutopartsTable(filteredAutoparts);
-  }
-
-  function resetAutopartsFilters(){
-    document.getElementById("autopartsFilterAgent").value = "";
-    document.getElementById("autopartsFilterStatus").value = "";
-    document.getElementById("autopartsFilterCity").value = "";
-    document.getElementById("autopartsFilterPart").value = "";
-    document.getElementById("autopartsFilterPayment").value = "";
-    document.getElementById("autopartsFilterFrom").value = "";
-    document.getElementById("autopartsFilterTo").value = "";
-    filteredAutoparts = [...autopartsCache];
-    renderAutopartsTable(filteredAutoparts);
-  }
-
-  function downloadAutopartsCSV(){
-    downloadCSV("autoparts_orders_report.csv", filteredAutoparts.map(o => ({
-      id: o.id,
-      employee_id: o.employee_id || "",
-      agent_name: o.agent_name || "",
-      customer: o.customer_name || "",
-      contact: o.customer_contact_number || "",
-      city: o.city || "",
-      part_name: o.part_name || "",
-      total_amount: o.total_amount || "",
-      payment_mode: o.payment_mode || "",
-      status: o.status || ""
-    })));
   }
 
   async function updateAutopartsOrderStatus(id, status){
@@ -1267,116 +956,53 @@
     }
   }
 
-  function renderAttendanceTable(rows){
-    const table = document.getElementById("attendanceTable");
-    table.innerHTML = "";
-
-    if (!rows || rows.length === 0) {
-      table.innerHTML = `<tr><td colspan="9">No attendance found</td></tr>`;
-      return;
-    }
-
-    rows.forEach(a => {
-      table.innerHTML += `
-        <tr>
-          <td>${a.id || ""}</td>
-          <td>${a.employee_id || ""}</td>
-          <td>${a.agent_name || ""}</td>
-          <td>${a.shift || ""}</td>
-          <td>${a.attendance_date || ""}</td>
-          <td>${formatDateTime(a.check_in)}</td>
-          <td>${formatDateTime(a.check_out)}</td>
-          <td>${formatSeconds(a.total_login_seconds || 0)}</td>
-          <td>${a.status || ""}</td>
-        </tr>
-      `;
-    });
-  }
-
-  async function loadAttendance(){
+  async function loadAttendance(filterDate = ""){
     try {
-      const res = await fetch("/attendance");
+      let url = "/attendance";
+      if (filterDate) {
+        url += "?date=" + encodeURIComponent(filterDate);
+      }
+
+      const res = await fetch(url);
       const data = await res.json();
 
-      attendanceCache = data.attendance || [];
-      filteredAttendance = [...attendanceCache];
-      renderAttendanceTable(filteredAttendance);
+      const table = document.getElementById("attendanceTable");
+      table.innerHTML = "";
+
+      if (!data.success || !data.attendance || data.attendance.length === 0) {
+        table.innerHTML = `<tr><td colspan="9">No attendance found</td></tr>`;
+        return;
+      }
+
+      data.attendance.forEach(a => {
+        table.innerHTML += `
+          <tr>
+            <td>${a.id || ""}</td>
+            <td>${a.employee_id || ""}</td>
+            <td>${a.agent_name || ""}</td>
+            <td>${a.shift || ""}</td>
+            <td>${a.attendance_date || ""}</td>
+            <td>${formatDateTime(a.check_in)}</td>
+            <td>${formatDateTime(a.check_out)}</td>
+            <td>${formatSeconds(a.total_login_seconds || 0)}</td>
+            <td>${a.status || ""}</td>
+          </tr>
+        `;
+      });
     } catch (error) {
       console.log("LOAD ATTENDANCE ERROR:", error);
       document.getElementById("attendanceTable").innerHTML = `<tr><td colspan="9">Failed to load attendance</td></tr>`;
     }
   }
 
-  function applyAttendanceFilters(){
-    const agent = document.getElementById("attendanceFilterAgent").value;
-    const shift = normalizeText(document.getElementById("attendanceFilterShift").value);
-    const from = document.getElementById("attendanceFilterFrom").value;
-    const to = document.getElementById("attendanceFilterTo").value;
-
-    filteredAttendance = attendanceCache.filter(a => {
-      if (agent && String(a.agent_id) !== String(agent)) return false;
-      if (shift && normalizeText(a.shift) !== shift) return false;
-      if ((from || to) && !inDateRange(a.attendance_date, from, to)) return false;
-      return true;
-    });
-
-    renderAttendanceTable(filteredAttendance);
+  async function filterAdminAttendance(){
+    const date = document.getElementById("adminAttendanceDate").value;
+    await loadAttendance(date);
   }
 
-  function resetAttendanceFilters(){
-    document.getElementById("attendanceFilterAgent").value = "";
-    document.getElementById("attendanceFilterShift").value = "";
-    document.getElementById("attendanceFilterFrom").value = "";
-    document.getElementById("attendanceFilterTo").value = "";
-    filteredAttendance = [...attendanceCache];
-    renderAttendanceTable(filteredAttendance);
-  }
-
-  function downloadAttendanceCSV(){
-    downloadCSV("attendance_report.csv", filteredAttendance.map(a => ({
-      id: a.id,
-      employee_id: a.employee_id || "",
-      agent_name: a.agent_name || "",
-      shift: a.shift || "",
-      attendance_date: a.attendance_date || "",
-      check_in: formatDateTime(a.check_in),
-      check_out: formatDateTime(a.check_out),
-      total_login_time: formatSeconds(a.total_login_seconds || 0),
-      status: a.status || ""
-    })));
-  }
-
-  function renderLeavesTable(rows){
-    const table = document.getElementById("leavesTable");
-    table.innerHTML = "";
-
-    if (!rows || rows.length === 0) {
-      table.innerHTML = `<tr><td colspan="9">No leaves found</td></tr>`;
-      return;
-    }
-
-    rows.forEach(l => {
-      table.innerHTML += `
-        <tr>
-          <td>${l.id || ""}</td>
-          <td>${l.employee_id || ""}</td>
-          <td>${l.agent_name || ""}</td>
-          <td>${l.leave_type || ""}</td>
-          <td>${l.start_date || ""}</td>
-          <td>${l.end_date || ""}</td>
-          <td>${l.reason || ""}</td>
-          <td>${l.status || ""}</td>
-          <td>
-            <select class="action-select" onchange="updateLeaveStatus(${l.id}, this.value)">
-              <option value="">Select</option>
-              <option value="pending" ${l.status === "pending" ? "selected" : ""}>Pending</option>
-              <option value="approved" ${l.status === "approved" ? "selected" : ""}>Approved</option>
-              <option value="rejected" ${l.status === "rejected" ? "selected" : ""}>Rejected</option>
-            </select>
-          </td>
-        </tr>
-      `;
-    });
+  async function resetAdminAttendance(){
+    document.getElementById("adminAttendanceDate").value = "";
+    await loadAttendance();
   }
 
   async function loadLeaves(){
@@ -1384,54 +1010,40 @@
       const res = await fetch("/leave");
       const data = await res.json();
 
-      leavesCache = data.leaves || [];
-      filteredLeaves = [...leavesCache];
-      renderLeavesTable(filteredLeaves);
+      const table = document.getElementById("leavesTable");
+      table.innerHTML = "";
+
+      if (!data.success || !data.leaves || data.leaves.length === 0) {
+        table.innerHTML = `<tr><td colspan="9">No leaves found</td></tr>`;
+        return;
+      }
+
+      data.leaves.forEach(l => {
+        table.innerHTML += `
+          <tr>
+            <td>${l.id || ""}</td>
+            <td>${l.employee_id || ""}</td>
+            <td>${l.agent_name || ""}</td>
+            <td>${l.leave_type || ""}</td>
+            <td>${l.start_date || ""}</td>
+            <td>${l.end_date || ""}</td>
+            <td>${l.reason || ""}</td>
+            <td>${l.status || ""}</td>
+            <td>
+              <select class="action-select" onchange="updateLeaveStatus(${l.id}, this.value)">
+                <option value="">Select</option>
+                <option value="pending" ${l.status === "pending" ? "selected" : ""}>Pending</option>
+                <option value="approved" ${l.status === "approved" ? "selected" : ""}>Approved</option>
+                <option value="rejected" ${l.status === "rejected" ? "selected" : ""}>Rejected</option>
+              </select>
+            </td>
+          </tr>
+        `;
+      });
     } catch (error) {
       console.log("LOAD LEAVES ERROR:", error);
       document.getElementById("leavesTable").innerHTML = `<tr><td colspan="9">Failed to load leaves</td></tr>`;
     }
-  }
-
-  function applyLeavesFilters(){
-    const agent = document.getElementById("leavesFilterAgent").value;
-    const status = normalizeText(document.getElementById("leavesFilterStatus").value);
-    const type = normalizeText(document.getElementById("leavesFilterType").value);
-    const from = document.getElementById("leavesFilterFrom").value;
-    const to = document.getElementById("leavesFilterTo").value;
-
-    filteredLeaves = leavesCache.filter(l => {
-      if (agent && String(l.agent_id) !== String(agent)) return false;
-      if (status && normalizeText(l.status) !== status) return false;
-      if (type && !normalizeText(l.leave_type).includes(type)) return false;
-      if ((from || to) && !inDateRange(l.start_date, from, to)) return false;
-      return true;
-    });
-
-    renderLeavesTable(filteredLeaves);
-  }
-
-  function resetLeavesFilters(){
-    document.getElementById("leavesFilterAgent").value = "";
-    document.getElementById("leavesFilterStatus").value = "";
-    document.getElementById("leavesFilterType").value = "";
-    document.getElementById("leavesFilterFrom").value = "";
-    document.getElementById("leavesFilterTo").value = "";
-    filteredLeaves = [...leavesCache];
-    renderLeavesTable(filteredLeaves);
-  }
-
-  function downloadLeavesCSV(){
-    downloadCSV("leave_report.csv", filteredLeaves.map(l => ({
-      id: l.id,
-      employee_id: l.employee_id || "",
-      agent_name: l.agent_name || "",
-      leave_type: l.leave_type || "",
-      start_date: l.start_date || "",
-      end_date: l.end_date || "",
-      reason: l.reason || "",
-      status: l.status || ""
-    })));
   }
 
   async function updateLeaveStatus(id, status){
