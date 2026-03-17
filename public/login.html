@@ -60,7 +60,6 @@
 
 <script>
 async function login() {
-
   const username = document.getElementById("username").value.trim();
   const password = document.getElementById("password").value.trim();
   const msg = document.getElementById("msg");
@@ -68,7 +67,6 @@ async function login() {
   msg.innerText = "";
 
   try {
-
     const res = await fetch("/login", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -78,29 +76,23 @@ async function login() {
     const data = await res.json();
 
     if (data.success) {
-
       localStorage.setItem("user", JSON.stringify(data.user));
+      localStorage.setItem("agent_id", data.user.id);
 
       if (data.user.role === "admin") {
         window.location.href = "/index.html";
-      } 
-      else if (data.user.role === "agent") {
+      } else if (data.user.role === "agent") {
         window.location.href = "/agent.html";
-      } 
-      else {
+      } else {
         msg.innerText = "Invalid role";
       }
-
-    } 
-    else {
+    } else {
       msg.innerText = data.message || "Invalid login";
     }
-
   } catch (error) {
     console.log(error);
     msg.innerText = "Server error";
   }
-
 }
 </script>
 
